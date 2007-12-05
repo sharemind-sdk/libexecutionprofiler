@@ -44,10 +44,11 @@ void ExecutionProfiler::FinishLog()
 	// Flush all sections to the disc
 	while (sections.size () > 0) {
 		// Give time in one-second slices
-		if (!ProcessLog (1000)) {
-			WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] ERROR: Writing log file failed!");
-			break;
-		}
+		ExecutionSection s = sections.front ();
+		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
+		logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << std::endl;
+		sections.erase (sections.begin ());
+		sectionOffset++;
 	}
 	
 	// Close the log file, if necessary
@@ -62,7 +63,7 @@ bool ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */)
 	uint32 start = RakNet::GetTime ();
 	uint32 end = start + timeLimitMs;
 	
-	while (RakNet::GetTime () < end && sections.size () > 0) {
+	while (RakNet::GetTime () < end && sections.size () > 1000) {
 		ExecutionSection s = sections.front ();
 		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
 		logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << std::endl;
