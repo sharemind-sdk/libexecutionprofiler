@@ -87,7 +87,7 @@ bool ExecutionProfiler::StartLog(std::string filename)
 		}
 		
     WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Opened profiling log file " << filename << "!");
-		logfile << "Section ID" << ", " << "Start" << ", " << "End" << ", " << "Duration" << ", " << "Action" << ", " << "Location" << ", " << "Complexity" << ", " << "Parent Section ID" << std::endl;
+		logfile << "SectionID" << ", " << "Start" << ", " << "End" << ", " << "Duration" << ", " << "Action" << ", " << "Location" << ", " << "Complexity" << ", " << "ParentSectionID" << std::endl;
 		sectionOffset = 1;
 		
     return true;
