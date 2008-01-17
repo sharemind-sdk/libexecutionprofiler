@@ -11,6 +11,7 @@
 
 
 //BEGIN_USER_SECTION_BEFORE_CLASS_DECLARATION
+#include <stack>
 
 enum ActionCodes {
 
@@ -24,7 +25,10 @@ enum ActionCodes {
 	ACTION_SEND_INVOCATION = 7,	
 	ACTION_RECEIVE_VECTOR = 10,
 	ACTION_PROCESS_INCOMING_VECTOR = 11,
-	ACTION_DESERIALIZE_VECTOR = 12
+	ACTION_DESERIALIZE_VECTOR = 12,
+	
+	ACTION_MULTIPLY_VECTORS = 100,
+	ACTION_COMPARE_VECTORS = 101
 	
 };
 
@@ -33,7 +37,10 @@ enum LocationCodes {
 	// Classes
 	LOCATION_NETWORKNODE_SENDVECTOR = 1,
 	LOCATION_NETWORKNODE_RECEIVEVECTOR = 2,
-	LOCATION_NETWORKNODE_PROCESSINCOMINGVECTOR = 3
+	LOCATION_NETWORKNODE_PROCESSINCOMINGVECTOR = 3,
+	
+	LOCATION_VECTORIZED_MULTIPLICATION_QUERY = 4,
+	LOCATION_VECTORIZED_COMPARISON_QUERY = 5
 	
 	// Protocol rounds
 };
@@ -53,6 +60,8 @@ class ExecutionProfiler
 private:
 static std::ofstream logfile;
 private:
+static std::stack<uint32> sectionStack;
+private:
 static std::string filename;
 private:
 static std::vector<ExecutionSection> sections;
@@ -68,8 +77,20 @@ static void EndSection(uint32 sectionId);
 public:
 static void FinishLog();
 
+/**
+\TODO
+*/
+public:
+static void PopParentSection();
+
 private:
 static bool ProcessLog(uint32 timeLimitMs = 10);
+
+/**
+\TODO
+*/
+public:
+static void PushParentSection(uint32 sectionId);
 
 public:
 static bool StartLog(std::string filename);

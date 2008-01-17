@@ -20,6 +20,7 @@
 
 
 std::ofstream ExecutionProfiler::logfile;
+std::stack<uint32> ExecutionProfiler::sectionStack;
 std::string ExecutionProfiler::filename;
 std::vector<ExecutionSection> ExecutionProfiler::sections;
 uint32 ExecutionProfiler::sectionOffset = 0;
@@ -58,6 +59,11 @@ void ExecutionProfiler::FinishLog()
 	}
 }//END_a7be3781d70e9689d8f1f5f3ade8dfd2
 
+void ExecutionProfiler::PopParentSection()
+{//BEGIN_af14df887d873edc777bd481d137fef8
+	sectionStack.pop ();
+}//END_af14df887d873edc777bd481d137fef8
+
 bool ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */)
 {//BEGIN_7e51adf7891fed3037a150ab9104c2d0
 	uint32 start = RakNet::GetTime ();
@@ -73,6 +79,11 @@ bool ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */)
 	
 	return true;
 }//END_7e51adf7891fed3037a150ab9104c2d0
+
+void ExecutionProfiler::PushParentSection(uint32 sectionId)
+{//BEGIN_38dbf1143fee3a67b4fe8c758817ad10
+	sectionStack.push (sectionId);
+}//END_38dbf1143fee3a67b4fe8c758817ad10
 
 bool ExecutionProfiler::StartLog(std::string filename)
 {//BEGIN_8194e0626e16b391544cf5092e337a7c
@@ -106,9 +117,16 @@ uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint16 locationCode, u
 	if (parentSectionId > sectionOffset + (sections.size () - 1)) {
 		WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] WARNING: The specified parent section " << parentSectionId << " does not exist!");
 	}
+
+	uint32 usedParentSectionId = parentSectionId;
+	if (parentSectionId == 0) {
+		if (sectionStack.size () > 0) {
+			usedParentSectionId = sectionStack.top ();
+		}
+	}
 	
 	// Create the entry and store it 
-	ExecutionSection s (actionCode, locationCode, complexityParameter, parentSectionId);
+	ExecutionSection s (actionCode, locationCode, complexityParameter, usedParentSectionId);
 	s.startTime = RakNet::GetTime ();
 	s.endTime = 0;
 	sections.push_back (s);
