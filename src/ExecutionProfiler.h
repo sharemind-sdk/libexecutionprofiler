@@ -83,7 +83,7 @@ static void FinishLog();
 public:
 static void PopParentSection();
 
-private:
+public:
 static bool ProcessLog(uint32 timeLimitMs = 10);
 
 /**
