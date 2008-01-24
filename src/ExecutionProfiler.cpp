@@ -61,10 +61,11 @@ void ExecutionProfiler::FinishLog()
 
 void ExecutionProfiler::PopParentSection()
 {//BEGIN_af14df887d873edc777bd481d137fef8
-	sectionStack.pop ();
+	if (sectionStack.size () > 0)
+		sectionStack.pop ();
 }//END_af14df887d873edc777bd481d137fef8
 
-bool ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */)
+void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */)
 {//BEGIN_7e51adf7891fed3037a150ab9104c2d0
 	uint32 start = RakNet::GetTime ();
 	uint32 end = start + timeLimitMs;
@@ -76,8 +77,6 @@ bool ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */)
 		sections.erase (sections.begin ());
 		sectionOffset++;
 	}
-	
-	return true;
 }//END_7e51adf7891fed3037a150ab9104c2d0
 
 void ExecutionProfiler::PushParentSection(uint32 sectionId)
