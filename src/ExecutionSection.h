@@ -16,11 +16,18 @@
 
 
 /**
-
+ This is a data structure for storing executed sections for profiling purposes.
+ 
+ This class is used internally by ExecutionProfiler.
 */
 struct ExecutionSection
 {
 // constructors:
+/**
+ Constructs an execution section based on the given parameters
+	 
+ \param[in] sectionId the id returned by StartSection. If no such section has been started, the method does nothing.
+*/
 public:
 ExecutionSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId);
 
