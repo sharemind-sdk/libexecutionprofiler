@@ -165,7 +165,7 @@ static void PopParentSection();
  \param[in] timeLimitMs the number of milliseconds allowed for flushing sections to the file. 
  If this is zero, no sections are flushed. The default value for this parameter is 10.
 */
-private:
+public:
 static void ProcessLog(uint32 timeLimitMs = 10);
 
 /**
