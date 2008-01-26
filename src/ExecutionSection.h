@@ -26,7 +26,10 @@ struct ExecutionSection
 /**
  Constructs an execution section based on the given parameters
 	 
- \param[in] sectionId the id returned by StartSection. If no such section has been started, the method does nothing.
+ \param[in] actionCode a code describing what the section does (\see the ActionCodes enum)
+ \param[in] locationCode a code describing where the section is (\see the LocationCodes enum)
+ \param[in] complexityParameter a number describing the O(n) complexity of the section
+ \param[in] parentSectionId the identifier of a section which contains this one
 */
 public:
 ExecutionSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId);
@@ -34,16 +37,34 @@ ExecutionSection(uint16 actionCode, uint16 locationCode, uint32 complexityParame
 
 // members:
 
+/**
+ Stores the action code of the section
+*/
 public:
 uint16 actionCode;
+/**
+ Stores the location code of the section
+*/
 public:
 uint16 locationCode;
+/**
+ The O(n) complexity parameter for the section
+*/
 public:
 uint32 complexityParameter;
+/**
+ A timestamp for the moment the section was completed
+*/
 public:
 uint32 endTime;
+/**
+ The identifier of the parent section containing this one (zero, if none)
+*/
 public:
 uint32 parentSectionId;
+/**
+ A timestamp for the moment the section started
+*/
 public:
 uint32 startTime;
 
