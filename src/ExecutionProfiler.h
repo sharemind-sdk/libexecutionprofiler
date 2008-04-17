@@ -1,6 +1,6 @@
 /*
 * This file is a part of the Sharemind framework.
-*
+* 
 * Copyright (C) Dan Bogdanov, 2006-2008
 * All rights are reserved. Reproduction in whole or part is prohibited
 * without the written consent of the copyright owner.
@@ -240,4 +240,3 @@ static uint32 StartSection(uint16 actionCode, uint16 locationCode, uint32 comple
 
 #endif // H_5688d64798958aedfa1aebedd7670125_INLINES_H
 #endif //OBJECTS_BUILDER_PROJECT_INLINES
-
