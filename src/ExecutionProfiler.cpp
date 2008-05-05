@@ -34,7 +34,7 @@ void ExecutionProfiler::EndSection(uint32 sectionId)
 	}
 		
 	sections[sectionId - sectionOffset].endTime = RakNet::GetTime ();
-	WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Completed section " << sectionId << ".");
+	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Completed section " << sectionId << ".");
 }//END_461b9ef0616e26d0fabf96bae6b144bc
 
 void ExecutionProfiler::FinishLog()
@@ -131,7 +131,7 @@ uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint16 locationCode, u
 	sections.push_back (s);
 
 	uint32 sectionId = (sections.size () - 1) + sectionOffset;
-	WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Started section " << sectionId << " (" << actionCode << ", " << locationCode << ", " << complexityParameter << ", " << parentSectionId << ").");
+	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Started section " << sectionId << " (" << actionCode << ", " << locationCode << ", " << complexityParameter << ", " << parentSectionId << ").");
 
 	return sectionId;
 }//END_a91c321aa0fe27343e81047a096c8e30
