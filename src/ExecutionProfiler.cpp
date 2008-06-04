@@ -29,7 +29,7 @@ uint32 ExecutionProfiler::sectionOffset = 0;
 void ExecutionProfiler::EndSection(uint32 sectionId)
 {//BEGIN_461b9ef0616e26d0fabf96bae6b144bc
 	if ((sectionId - sectionOffset) >= sections.size ()) {
-		WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Can not find section to end. Requested section ID " << sectionId << " with offset " << sectionOffset << ".");
+		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] Can not find section to end. Requested section ID " << sectionId << " with offset " << sectionOffset << ".");
 		return;
 	}
 		
@@ -40,7 +40,7 @@ void ExecutionProfiler::EndSection(uint32 sectionId)
 void ExecutionProfiler::FinishLog()
 {//BEGIN_a7be3781d70e9689d8f1f5f3ade8dfd2
 
-	WRITE_TO_LOG (LOG_NORMAL, "[ExecutionProfiler] Flushing profiling log file.");
+	WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Flushing profiling log file.");
 	
 	// Flush all sections to the disc
 	while (sections.size () > 0) {
@@ -54,7 +54,7 @@ void ExecutionProfiler::FinishLog()
 	
 	// Close the log file, if necessary
 	if (logfile.is_open ()) {
-		WRITE_TO_LOG (LOG_NORMAL, "[ExecutionProfiler] Closing log file " << filename);
+		WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Closing log file " << filename);
 		logfile.close ();
 	}
 }//END_a7be3781d70e9689d8f1f5f3ade8dfd2
@@ -70,7 +70,7 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */)
 	uint32 start = RakNet::GetTime ();
 	uint32 end = start + timeLimitMs;
 	
-	while (RakNet::GetTime () < end && sections.size () > 1000) {
+	while (RakNet::GetTime () < end && sections.size () > 5000) {
 		ExecutionSection s = sections.front ();
 		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
 		logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << std::endl;
@@ -114,7 +114,7 @@ uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint16 locationCode, u
 {//BEGIN_a91c321aa0fe27343e81047a096c8e30
 
 	if (parentSectionId > sectionOffset + (sections.size () - 1)) {
-		WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] WARNING: The specified parent section " << parentSectionId << " does not exist!");
+		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] WARNING: The specified parent section " << parentSectionId << " does not exist!");
 	}
 
 	uint32 usedParentSectionId = parentSectionId;
