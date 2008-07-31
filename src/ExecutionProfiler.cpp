@@ -1,6 +1,6 @@
 /*
 * This file is a part of the Sharemind framework.
-* 
+*
 * Copyright (C) Dan Bogdanov, 2006-2008
 * All rights are reserved. Reproduction in whole or part is prohibited
 * without the written consent of the copyright owner.
@@ -19,10 +19,10 @@
 //END_USER_SECTION_AFTER_MASTER_INCLUDE
 
 
-std::ofstream ExecutionProfiler::logfile;
-std::stack<uint32> ExecutionProfiler::sectionStack;
-std::string ExecutionProfiler::filename;
-std::vector<ExecutionSection> ExecutionProfiler::sections;
+ofstream ExecutionProfiler::logfile;
+stack<uint32> ExecutionProfiler::sectionStack;
+string ExecutionProfiler::filename;
+vector<ExecutionSection> ExecutionProfiler::sections;
 uint32 ExecutionProfiler::sectionOffset = 0;
 
 
@@ -32,7 +32,7 @@ void ExecutionProfiler::EndSection(uint32 sectionId)
 		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] Can not find section to end. Requested section ID " << sectionId << " with offset " << sectionOffset << ".");
 		return;
 	}
-		
+
 	sections[sectionId - sectionOffset].endTime = RakNet::GetTime ();
 	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Completed section " << sectionId << ".");
 }//END_461b9ef0616e26d0fabf96bae6b144bc
@@ -41,17 +41,17 @@ void ExecutionProfiler::FinishLog()
 {//BEGIN_a7be3781d70e9689d8f1f5f3ade8dfd2
 
 	WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Flushing profiling log file.");
-	
+
 	// Flush all sections to the disc
 	while (sections.size () > 0) {
 		// Give time in one-second slices
 		ExecutionSection s = sections.front ();
 		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
-		logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << std::endl;
+		logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		sections.erase (sections.begin ());
 		sectionOffset++;
 	}
-	
+
 	// Close the log file, if necessary
 	if (logfile.is_open ()) {
 		WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Closing log file " << filename);
@@ -69,11 +69,11 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */)
 {//BEGIN_7e51adf7891fed3037a150ab9104c2d0
 	uint32 start = RakNet::GetTime ();
 	uint32 end = start + timeLimitMs;
-	
+
 	while (RakNet::GetTime () < end && sections.size () > 5000) {
 		ExecutionSection s = sections.front ();
 		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
-		logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << std::endl;
+		logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		sections.erase (sections.begin ());
 		sectionOffset++;
 	}
@@ -84,26 +84,26 @@ void ExecutionProfiler::PushParentSection(uint32 sectionId)
 	sectionStack.push (sectionId);
 }//END_38dbf1143fee3a67b4fe8c758817ad10
 
-bool ExecutionProfiler::StartLog(std::string filename)
+bool ExecutionProfiler::StartLog(string filename)
 {//BEGIN_8194e0626e16b391544cf5092e337a7c
 	// Check if we have a filename
 	if (filename.length () > 0) {
-    
+
 		// Try to open the log file
 		logfile.open (filename.c_str ());
 		if (logfile.bad() || logfile.fail ()) {
 			WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] ERROR: Can't open console log file " << filename << "!");
 			return false;
 		}
-		
+
     WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Opened profiling log file " << filename << "!");
-		logfile << "SectionID" << ", " << "Start" << ", " << "End" << ", " << "Duration" << ", " << "Action" << ", " << "Location" << ", " << "Complexity" << ", " << "ParentSectionID" << std::endl;
+		logfile << "SectionID" << ", " << "Start" << ", " << "End" << ", " << "Duration" << ", " << "Action" << ", " << "Location" << ", " << "Complexity" << ", " << "ParentSectionID" << endl;
 		sectionOffset = 1;
-		
+
     return true;
-    
+
   } else {
-		
+
     // We didn't get a filename so spread the information about that.
     WRITE_TO_LOG (LOG_MINIMAL, "[Console] ERROR: Empty log file name!");
     return false;
@@ -123,8 +123,8 @@ uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint16 locationCode, u
 			usedParentSectionId = sectionStack.top ();
 		}
 	}
-	
-	// Create the entry and store it 
+
+	// Create the entry and store it
 	ExecutionSection s (actionCode, locationCode, complexityParameter, usedParentSectionId);
 	s.startTime = RakNet::GetTime ();
 	s.endTime = 0;

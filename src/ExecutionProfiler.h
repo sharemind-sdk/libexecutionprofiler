@@ -1,6 +1,6 @@
 /*
 * This file is a part of the Sharemind framework.
-* 
+*
 * Copyright (C) Dan Bogdanov, 2006-2008
 * All rights are reserved. Reproduction in whole or part is prohibited
 * without the written consent of the copyright owner.
@@ -12,6 +12,7 @@
 
 //BEGIN_USER_SECTION_BEFORE_CLASS_DECLARATION
 #include <stack>
+using std::stack;
 
 /*! The codes describing actions performed in an execution section.
 They are specified numerically, because the ProfileLogAnalyst tool
@@ -108,24 +109,24 @@ class ExecutionProfiler
  Handle of the file we write the profiling log to
 */
 private:
-static std::ofstream logfile;
+static ofstream logfile;
 /**
  The stack of parent section identifiers.
 
  \see PushParentSection
 */
 private:
-static std::stack<uint32> sectionStack;
+static stack<uint32> sectionStack;
 /**
  The name of the logfile to use
 */
 private:
-static std::string filename;
+static string filename;
 /**
  The cache of sections waiting for flushing to the disk
 */
 private:
-static std::vector<ExecutionSection> sections;
+static vector<ExecutionSection> sections;
 /**
  The next available section identifier
 */
@@ -199,7 +200,7 @@ static void PushParentSection(uint32 sectionId);
  \retval false if opening the file failed
 */
 public:
-static bool StartLog(std::string filename);
+static bool StartLog(string filename);
 
 /**
  Specifies the starting point of a code section for profiling.
