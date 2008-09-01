@@ -25,6 +25,13 @@ string ExecutionProfiler::filename;
 vector<ExecutionSection> ExecutionProfiler::sections;
 uint32 ExecutionProfiler::sectionOffset = 0;
 
+ExecutionSection::ExecutionSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId) {
+	this->actionCode = actionCode;
+	this->locationCode = locationCode;
+	this->complexityParameter = complexityParameter;
+	this->parentSectionId = parentSectionId;
+}
+
 
 void ExecutionProfiler::EndSection(uint32 sectionId)
 {//BEGIN_461b9ef0616e26d0fabf96bae6b144bc

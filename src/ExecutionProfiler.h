@@ -1,16 +1,16 @@
 /*
-* This file is a part of the Sharemind framework.
-*
-* Copyright (C) Dan Bogdanov, 2006-2008
-* All rights are reserved. Reproduction in whole or part is prohibited
-* without the written consent of the copyright owner.
-*/
-#ifndef H_5688d64798958aedfa1aebedd7670125_H
-#define H_5688d64798958aedfa1aebedd7670125_H
+ * This file is a part of the Sharemind framework.
+ *
+ * Copyright (C) Dan Bogdanov, 2006-2008
+ * All rights are reserved. Reproduction in whole or part is prohibited
+ * without the written consent of the copyright owner.
+ *
+ * Main contributors:
+ * Dan Bogdanov (db@math.ut.ee)
+ */
+#ifndef EXECUTIONPROFILER_H
+#define EXECUTIONPROFILER_H
 
-
-
-//BEGIN_USER_SECTION_BEFORE_CLASS_DECLARATION
 #include <stack>
 using std::stack;
 
@@ -84,7 +84,57 @@ enum LocationCodes {
 	LOCATION_MINER_INTERFACE = 7
 
 };
-//END_USER_SECTION_BEFORE_CLASS_DECLARATION
+
+/**
+ This is a data structure for storing executed sections for profiling purposes.
+
+ This class is used internally by ExecutionProfiler.
+*/
+struct ExecutionSection {
+
+public:
+
+	/**
+	 Constructs an execution section based on the given parameters
+
+	 \param[in] actionCode a code describing what the section does (\see the ActionCodes enum)
+	 \param[in] locationCode a code describing where the section is (\see the LocationCodes enum)
+	 \param[in] complexityParameter a number describing the O(n) complexity of the section
+	 \param[in] parentSectionId the identifier of a section which contains this one
+	*/
+	ExecutionSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId);
+
+	/**
+	 Stores the action code of the section
+	*/
+	uint16 actionCode;
+
+	/**
+	 Stores the location code of the section
+	*/
+uint16 locationCode;
+
+	/**
+	 The O(n) complexity parameter for the section
+	*/
+	uint32 complexityParameter;
+
+	/**
+	 A timestamp for the moment the section was completed
+	*/
+	uint32 endTime;
+
+	/**
+	 The identifier of the parent section containing this one (zero, if none)
+	*/
+	uint32 parentSectionId;
+
+	/**
+	 A timestamp for the moment the section started
+	*/
+	uint32 startTime;
+
+};
 
 
 /**
@@ -98,146 +148,116 @@ enum LocationCodes {
  All methods are static and can be accessed from all over the code.
 
 */
-class ExecutionProfiler
-{
-// constructors:
+class ExecutionProfiler {
+
+public:
+
+	/**
+	 Starts the profiler by specifying a log file to write sections into.
+
+	 The profiler will open a file with the given name and will log all sections to this file.
+
+	 \param[in] filename the name of the file to log the sections to
+
+	 \retval true if opening the file was successful
+	 \retval false if opening the file failed
+	*/
+	static bool StartLog(string filename);
+
+	/**
+	 Specifies the starting point of a code section for profiling.
+
+	 This method is called before the profiled piece of code. The EndSection method is called after.
+	 The profiler will store timestamps of both events and compute durations during ProcessLog invocations.
+
+	 \param[in] actionCode a value in the ActionCodes enum which specifies what is being done in the section
+	 \param[in] locationCode a value in the LocationCodes enum which specifies the location of the section in the code
+	 \param[in] complexityParameter indicates the complexity parameter for the section (eg number of values in the processed vector)
+	 \param[in] parentSectionId the identifier of a section which contains this new section (see also: PushParentSection)
+
+	 \returns an unique identifier for the profiled code section which should be passed to EndSection later on
+	*/
+	static uint32 StartSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId = 0);
+
+	/**
+	 Completes the specified section.
+
+	 This method finds the section specified by sectionId and completes it.
+	 The current time is stored as the end timestamp for this section.
+
+	 \param[in] sectionId the id returned by StartSection. If no such section has been started, the method does nothing.
+	*/
+	static void EndSection(uint32 sectionId);
+
+	/**
+	 Finishes profiling and writes or cached section to the log file.
+	*/
+	static void FinishLog();
+
+	/**
+	 Processes and logs sections cached in memory.
+
+	 If more than a thousand sections are cached, work for the allowed time of milliseconds
+	 and write as many as possible to the disk. For each section the duration is also computed.
+
+	 \param[in] timeLimitMs the number of milliseconds allowed for flushing sections to the file.
+	 If this is zero, no sections are flushed. The default value for this parameter is 10.
+	*/
+	static void ProcessLog(uint32 timeLimitMs = 10);
+
+	/**
+	 Specifies a default parent section for subsequent sections.
+
+	 Sometimes it is not comfortable to implicitly specify a parent section identifer when starting a section.
+	 For example, the identifier might be specified elsewhere in the code and it is not feasible to transfer it.
+	 This method allows the programmer to specify a section which will be used as a parent section for all
+	 sections which are started later, but have no parent specified.
+
+	 The identifier is pushed on a stack of identifiers which allows the programmer to nest sections.
+	 The PopParentSection method is used to pop the top identifier from this stack.
+
+	 \param[in] sectionId the id of the section to be used as a parent for subsequent sections
+	*/
+public:
+	static void PushParentSection(uint32 sectionId);
 
 
-// members:
+	/**
+	 Pops a parent section identifier from the stack.
 
-/**
- Handle of the file we write the profiling log to
-*/
+	 If the stack is empty, nothing is done.
+	*/
+	static void PopParentSection();
+
 private:
-static ofstream logfile;
-/**
- The stack of parent section identifiers.
 
- \see PushParentSection
-*/
-private:
-static stack<uint32> sectionStack;
-/**
- The name of the logfile to use
-*/
-private:
-static string filename;
-/**
- The cache of sections waiting for flushing to the disk
-*/
-private:
-static vector<ExecutionSection> sections;
-/**
- The next available section identifier
-*/
-private:
-static uint32 sectionOffset;
+	/**
+	 Handle of the file we write the profiling log to
+	*/
+	static ofstream logfile;
 
+	/**
+	 The stack of parent section identifiers.
 
-//methods:
+	 \see PushParentSection
+	*/
+	static stack<uint32> sectionStack;
 
-/**
- Completes the specified section.
+	/**
+	 The name of the logfile to use
+	*/
+	static string filename;
 
- This method finds the section specified by sectionId and completes it.
- The current time is stored as the end timestamp for this section.
+	/**
+	 The cache of sections waiting for flushing to the disk
+	*/
+	static vector<ExecutionSection> sections;
 
- \param[in] sectionId the id returned by StartSection. If no such section has been started, the method does nothing.
-*/
-public:
-static void EndSection(uint32 sectionId);
-
-/**
- Finishes profiling and writes or cached section to the log file.
-*/
-public:
-static void FinishLog();
-
-/**
- Pops a parent section identifier from the stack.
-
- If the stack is empty, nothing is done.
-*/
-public:
-static void PopParentSection();
-
-/**
- Processes and logs sections cached in memory.
-
- If more than a thousand sections are cached, work for the allowed time of milliseconds
- and write as many as possible to the disk. For each section the duration is also computed.
-
- \param[in] timeLimitMs the number of milliseconds allowed for flushing sections to the file.
- If this is zero, no sections are flushed. The default value for this parameter is 10.
-*/
-public:
-static void ProcessLog(uint32 timeLimitMs = 10);
-
-/**
- Specifies a default parent section for subsequent sections.
-
- Sometimes it is not comfortable to implicitly specify a parent section identifer when starting a section.
- For example, the identifier might be specified elsewhere in the code and it is not feasible to transfer it.
- This method allows the programmer to specify a section which will be used as a parent section for all
- sections which are started later, but have no parent specified.
-
- The identifier is pushed on a stack of identifiers which allows the programmer to nest sections.
- The PopParentSection method is used to pop the top identifier from this stack.
-
- \param[in] sectionId the id of the section to be used as a parent for subsequent sections
-*/
-public:
-static void PushParentSection(uint32 sectionId);
-
-/**
- Starts the profiler by specifying a log file to write sections into.
-
- The profiler will open a file with the given name and will log all sections to this file.
-
- \param[in] filename the name of the file to log the sections to
-
- \retval true if opening the file was successful
- \retval false if opening the file failed
-*/
-public:
-static bool StartLog(string filename);
-
-/**
- Specifies the starting point of a code section for profiling.
-
- This method is called before the profiled piece of code. The EndSection method is called after.
- The profiler will store timestamps of both events and compute durations during ProcessLog invocations.
-
- \param[in] actionCode a value in the ActionCodes enum which specifies what is being done in the section
- \param[in] locationCode a value in the LocationCodes enum which specifies the location of the section in the code
- \param[in] complexityParameter indicates the complexity parameter for the section (eg number of values in the processed vector)
- \param[in] parentSectionId the identifier of a section which contains this new section (see also: PushParentSection)
-
- \returns an unique identifier for the profiled code section which should be passed to EndSection later on
-*/
-public:
-static uint32 StartSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId = 0);
-
-
-
-//child groups:
-
-
-//child classes:
-
+	/**
+	 The next available section identifier
+	*/
+	static uint32 sectionOffset;
 
 };
 
-//BEGIN_USER_SECTION_AFTER_CLASS_DECLARATION
-
-//END_USER_SECTION_AFTER_CLASS_DECLARATION
-
-
-#endif // H_5688d64798958aedfa1aebedd7670125_H
-
-#ifdef OBJECTS_BUILDER_PROJECT_INLINES
-#ifndef H_5688d64798958aedfa1aebedd7670125_INLINES_H
-#define H_5688d64798958aedfa1aebedd7670125_INLINES_H
-
-#endif // H_5688d64798958aedfa1aebedd7670125_INLINES_H
-#endif //OBJECTS_BUILDER_PROJECT_INLINES
+#endif // EXECUTIONPROFILER_H
