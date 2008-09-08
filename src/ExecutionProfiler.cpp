@@ -1,29 +1,25 @@
 /*
-* This file is a part of the Sharemind framework.
-*
-* Copyright (C) Dan Bogdanov, 2006-2008
-* All rights are reserved. Reproduction in whole or part is prohibited
-* without the written consent of the copyright owner.
-*/
+ * This file is a part of the Sharemind framework.
+ *
+ * Copyright (C) Dan Bogdanov, 2006-2008
+ * All rights are reserved. Reproduction in whole or part is prohibited
+ * without the written consent of the copyright owner.
+ *
+ * Main contributors:
+ * Dan Bogdanov (db@math.ut.ee)
+ */
 
-
-//BEGIN_USER_SECTION_BEFORE_MASTER_INCLUDE
-
-//END_USER_SECTION_BEFORE_MASTER_INCLUDE
-
+#include "GetTime.h"
 
 #include "Sharemind.h"
 
-//BEGIN_USER_SECTION_AFTER_MASTER_INCLUDE
-#include "GetTime.h"
-//END_USER_SECTION_AFTER_MASTER_INCLUDE
-
-
+// Initialize static variables
 ofstream ExecutionProfiler::logfile;
 stack<uint32> ExecutionProfiler::sectionStack;
 string ExecutionProfiler::filename;
 vector<ExecutionSection> ExecutionProfiler::sections;
 uint32 ExecutionProfiler::sectionOffset = 0;
+
 
 ExecutionSection::ExecutionSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId) {
 	this->actionCode = actionCode;
@@ -34,19 +30,17 @@ ExecutionSection::ExecutionSection(uint16 actionCode, uint16 locationCode, uint3
 
 
 void ExecutionProfiler::EndSection(uint32 sectionId)
-{//BEGIN_461b9ef0616e26d0fabf96bae6b144bc
+{
 	if ((sectionId - sectionOffset) >= sections.size ()) {
 		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] Can not find section to end. Requested section ID " << sectionId << " with offset " << sectionOffset << ".");
 		return;
 	}
 
 	sections[sectionId - sectionOffset].endTime = RakNet::GetTime ();
-	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Completed section " << sectionId << ".");
-}//END_461b9ef0616e26d0fabf96bae6b144bc
+}
 
-void ExecutionProfiler::FinishLog()
-{//BEGIN_a7be3781d70e9689d8f1f5f3ade8dfd2
 
+void ExecutionProfiler::FinishLog() {
 	WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Flushing profiling log file.");
 
 	// Flush all sections to the disc
@@ -64,16 +58,16 @@ void ExecutionProfiler::FinishLog()
 		WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Closing log file " << filename);
 		logfile.close ();
 	}
-}//END_a7be3781d70e9689d8f1f5f3ade8dfd2
+}
 
-void ExecutionProfiler::PopParentSection()
-{//BEGIN_af14df887d873edc777bd481d137fef8
+
+void ExecutionProfiler::PopParentSection() {
 	if (sectionStack.size () > 0)
 		sectionStack.pop ();
-}//END_af14df887d873edc777bd481d137fef8
+}
 
-void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */)
-{//BEGIN_7e51adf7891fed3037a150ab9104c2d0
+
+void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
 	uint32 start = RakNet::GetTime ();
 	uint32 end = start + timeLimitMs;
 
@@ -84,15 +78,15 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */)
 		sections.erase (sections.begin ());
 		sectionOffset++;
 	}
-}//END_7e51adf7891fed3037a150ab9104c2d0
+}
 
-void ExecutionProfiler::PushParentSection(uint32 sectionId)
-{//BEGIN_38dbf1143fee3a67b4fe8c758817ad10
+
+void ExecutionProfiler::PushParentSection(uint32 sectionId) {
 	sectionStack.push (sectionId);
-}//END_38dbf1143fee3a67b4fe8c758817ad10
+}
 
-bool ExecutionProfiler::StartLog(string filename)
-{//BEGIN_8194e0626e16b391544cf5092e337a7c
+
+bool ExecutionProfiler::StartLog(string filename) {
 	// Check if we have a filename
 	if (filename.length () > 0) {
 
@@ -103,23 +97,22 @@ bool ExecutionProfiler::StartLog(string filename)
 			return false;
 		}
 
-    WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Opened profiling log file " << filename << "!");
+		WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Opened profiling log file " << filename << "!");
 		logfile << "SectionID" << ", " << "Start" << ", " << "End" << ", " << "Duration" << ", " << "Action" << ", " << "Location" << ", " << "Complexity" << ", " << "ParentSectionID" << endl;
 		sectionOffset = 1;
 
-    return true;
+		return true;
 
-  } else {
+	} else {
 
-    // We didn't get a filename so spread the information about that.
-    WRITE_TO_LOG (LOG_MINIMAL, "[Console] ERROR: Empty log file name!");
-    return false;
-  }
-}//END_8194e0626e16b391544cf5092e337a7c
+		// We didn't get a filename so spread the information about that.
+		WRITE_TO_LOG (LOG_MINIMAL, "[Console] ERROR: Empty log file name!");
+		return false;
+	}
+}
 
-uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId/* = 0 */)
-{//BEGIN_a91c321aa0fe27343e81047a096c8e30
 
+uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId/* = 0 */) {
 	if (parentSectionId > sectionOffset + (sections.size () - 1)) {
 		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] WARNING: The specified parent section " << parentSectionId << " does not exist!");
 	}
@@ -141,9 +134,4 @@ uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint16 locationCode, u
 	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Started section " << sectionId << " (" << actionCode << ", " << locationCode << ", " << complexityParameter << ", " << parentSectionId << ").");
 
 	return sectionId;
-}//END_a91c321aa0fe27343e81047a096c8e30
-
-
-//BEGIN_USER_SECTION_AFTER_GENERATED_CODE
-
-//END_USER_SECTION_AFTER_GENERATED_CODE
+}
