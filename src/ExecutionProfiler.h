@@ -12,7 +12,9 @@
 #define EXECUTIONPROFILER_H
 
 #include <stack>
+#include <boost/thread.hpp>
 using std::stack;
+using boost::mutex;
 
 /*! The codes describing actions performed in an execution section.
 They are specified numerically, because the ProfileLogAnalyst tool
@@ -257,6 +259,8 @@ private:
 	 The next available section identifier
 	*/
 	static uint32 sectionOffset;
+
+	static mutex profileLogMutex;
 
 };
 

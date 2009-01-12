@@ -29,8 +29,10 @@ ExecutionSection::ExecutionSection(uint16 actionCode, uint16 locationCode, uint3
 }
 
 
-void ExecutionProfiler::EndSection(uint32 sectionId)
-{
+void ExecutionProfiler::EndSection(uint32 sectionId) {
+	// Lock the list
+	boost::mutex::scoped_lock (profileLogMutex);
+
 	if ((sectionId - sectionOffset) >= sections.size ()) {
 		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] Can not find section to end. Requested section ID " << sectionId << " with offset " << sectionOffset << ".");
 		return;
@@ -41,6 +43,10 @@ void ExecutionProfiler::EndSection(uint32 sectionId)
 
 
 void ExecutionProfiler::FinishLog() {
+	// Lock the list
+	boost::mutex::scoped_lock (profileLogMutex);
+
+
 	WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Flushing profiling log file.");
 
 	// Flush all sections to the disc
@@ -62,12 +68,18 @@ void ExecutionProfiler::FinishLog() {
 
 
 void ExecutionProfiler::PopParentSection() {
+	// Lock the list
+	boost::mutex::scoped_lock (profileLogMutex);
+
 	if (sectionStack.size () > 0)
 		sectionStack.pop ();
 }
 
 
 void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
+	// Lock the list
+	boost::mutex::scoped_lock (profileLogMutex);
+
 	uint32 start = RakNet::GetTime ();
 	uint32 end = start + timeLimitMs;
 
@@ -82,11 +94,17 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
 
 
 void ExecutionProfiler::PushParentSection(uint32 sectionId) {
+	// Lock the list
+	boost::mutex::scoped_lock (profileLogMutex);
+
 	sectionStack.push (sectionId);
 }
 
 
 bool ExecutionProfiler::StartLog(string filename) {
+	// Lock the list
+	boost::mutex::scoped_lock (profileLogMutex);
+
 	// Check if we have a filename
 	if (filename.length () > 0) {
 
@@ -113,6 +131,9 @@ bool ExecutionProfiler::StartLog(string filename) {
 
 
 uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId/* = 0 */) {
+	// Lock the list
+	boost::mutex::scoped_lock (profileLogMutex);
+
 	if (parentSectionId > sectionOffset + (sections.size () - 1)) {
 		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] WARNING: The specified parent section " << parentSectionId << " does not exist!");
 	}
