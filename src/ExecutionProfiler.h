@@ -12,8 +12,10 @@
 #define EXECUTIONPROFILER_H
 
 #include <stack>
+#include <deque>
 #include <boost/thread.hpp>
 using std::stack;
+using std::deque;
 using boost::mutex;
 
 /*! The codes describing actions performed in an execution section.
@@ -114,7 +116,7 @@ public:
 	/**
 	 Stores the location code of the section
 	*/
-uint16 locationCode;
+	uint16 locationCode;
 
 	/**
 	 The O(n) complexity parameter for the section
@@ -253,7 +255,7 @@ private:
 	/**
 	 The cache of sections waiting for flushing to the disk
 	*/
-	static vector<ExecutionSection> sections;
+	static deque<ExecutionSection> sections;
 
 	/**
 	 The next available section identifier

@@ -17,7 +17,7 @@
 ofstream ExecutionProfiler::logfile;
 stack<uint32> ExecutionProfiler::sectionStack;
 string ExecutionProfiler::filename;
-vector<ExecutionSection> ExecutionProfiler::sections;
+deque<ExecutionSection> ExecutionProfiler::sections;
 uint32 ExecutionProfiler::sectionOffset = 0;
 
 
@@ -55,7 +55,7 @@ void ExecutionProfiler::FinishLog() {
 		ExecutionSection s = sections.front ();
 		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
 		logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
-		sections.erase (sections.begin ());
+		sections.pop_front ();
 		sectionOffset++;
 	}
 
@@ -87,7 +87,7 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
 		ExecutionSection s = sections.front ();
 		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
 		logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
-		sections.erase (sections.begin ());
+		sections.pop_front ();
 		sectionOffset++;
 	}
 }
