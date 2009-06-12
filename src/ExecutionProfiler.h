@@ -1,9 +1,7 @@
 /*
  * This file is a part of the Sharemind framework.
  *
- * Copyright (C) Dan Bogdanov, 2006-2008
- * All rights are reserved. Reproduction in whole or part is prohibited
- * without the written consent of the copyright owner.
+ * Copyright (C) AS Cybernetica, 2006-2009
  *
  * Main contributors:
  * Dan Bogdanov (db@math.ut.ee)
@@ -13,7 +11,9 @@
 
 #include <stack>
 #include <deque>
-#include <boost/thread.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 using std::stack;
 using std::deque;
 using boost::mutex;

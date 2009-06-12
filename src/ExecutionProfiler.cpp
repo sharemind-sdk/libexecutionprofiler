@@ -1,16 +1,13 @@
 /*
  * This file is a part of the Sharemind framework.
  *
- * Copyright (C) Dan Bogdanov, 2006-2008
- * All rights are reserved. Reproduction in whole or part is prohibited
- * without the written consent of the copyright owner.
+ * Copyright (C) AS Cybernetica, 2006-2009
  *
  * Main contributors:
  * Dan Bogdanov (db@math.ut.ee)
  */
 
 #include "GetTime.h"
-
 #include "Sharemind.h"
 
 // Initialize static variables
@@ -19,7 +16,7 @@ stack<uint32> ExecutionProfiler::sectionStack;
 string ExecutionProfiler::filename;
 deque<ExecutionSection> ExecutionProfiler::sections;
 uint32 ExecutionProfiler::sectionOffset = 0;
-mutex  ExecutionProfiler::profileLogMutex;
+mutex ExecutionProfiler::profileLogMutex;
 
 ExecutionSection::ExecutionSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId) {
 	this->actionCode = actionCode;
@@ -45,7 +42,6 @@ void ExecutionProfiler::EndSection(uint32 sectionId) {
 void ExecutionProfiler::FinishLog() {
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
-
 
 	WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Flushing profiling log file.");
 
@@ -86,7 +82,7 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
 	uint32 start = RakNet::GetTime ();
 	uint32 end = start + timeLimitMs;
 
-	while (RakNet::GetTime () < end && sections.size () > 5000) {
+	while (RakNet::GetTime () < end && sections.size () > 0) {
 		ExecutionSection s = sections.front ();
 		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
 		{
@@ -102,7 +98,6 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
 void ExecutionProfiler::PushParentSection(uint32 sectionId) {
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
-
 	sectionStack.push (sectionId);
 }
 
