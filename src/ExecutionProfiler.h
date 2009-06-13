@@ -4,7 +4,7 @@
  * Copyright (C) AS Cybernetica, 2006-2009
  *
  * Main contributors:
- * Dan Bogdanov (db@math.ut.ee)
+ * Dan Bogdanov (dan@cyber.ee)
  */
 #ifndef EXECUTIONPROFILER_H
 #define EXECUTIONPROFILER_H
