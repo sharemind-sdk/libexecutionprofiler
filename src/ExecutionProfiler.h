@@ -25,67 +25,47 @@ enum ActionCodes {
 
 	// NetworkNode actions
 
-	/*! All vector sending actions together (NetworkNode::SendValueVector) */
-	ACTION_SEND_VECTOR = 1,
-	/*! Flush the queue of packets waiting to be resent */
-	ACTION_FLUSH_RESEND_QUEUE = 2,
-	/*! Wait until the delivery of all previously sent packets is confirmed */
-	ACTION_CONFIRM_VECTOR_DELIVERY = 3,
-	/*! Wait until the network thread populates the outgoing buffers */
-	ACTION_FILL_OUTBOUND_BUFFER = 4,
-	/*! Wait until the outgoing buffers are emptied and sent */
-	ACTION_FLUSH_OUTBOUND_BUFFER = 5,
-	/*! Serialize the vector to be sent */
-	ACTION_VECTOR_SERIALIZATION = 6,
-	/*! Call the actual library Send method */
-	ACTION_SEND_INVOCATION = 7,
-	/*! All the time spent in the (NetworkNode::ReceiveValueVector) method */
-	ACTION_RECEIVE_VECTOR = 10,
-	/*! All the time spent in the (NetworkNode::ProcessIncomingVector) method */
-	ACTION_PROCESS_INCOMING_VECTOR = 11,
-	/*! Deserialize a vector from an incoming bitstream */
-	ACTION_DESERIALIZE_VECTOR = 12,
+	/*! The time spent to receive strings */
+	ACTION_RECEIVE_STRING,
+	
+	/*! The time spent to receive values */
+	ACTION_RECEIVE_VALUE,
 
-	// Queries
+	/*! The time spent to receive value vectors */
+	ACTION_RECEIVE_VALUE_VECTOR,
 
-	/*! The whole lifespan of a vector multiplication query */
-	ACTION_MULTIPLY_VECTORS = 100,
-	/*! The whole lifespan of a vector equality comparison query */
-	ACTION_COMPARE_VECTORS_EQUALITY = 101,
-	/*! The whole lifespan of a vector greater-than comparison query */
-	ACTION_COMPARE_VECTORS_GREATER_THAN = 102,
-	/*! The whole lifespan of a value addition query */
-	ACTION_ADD_VALUES = 103
+	/*! The time spent to flush outgoing network messages */
+	ACTION_FLUSH_NETWORK,
+	
+	/*! The time spent to send messages in the controller sessions' outgoing queues */
+	ACTION_PROCESS_OUTGOING_QUEUES,
 
-};
+	/*! The time spent to process and distribute incoming messages */
+	ACTION_PROCESS_INCOMING_PACKETS,
 
-/*! Codes specifying the location of the action, if it does not follow directly from the action. */
-enum LocationCodes {
+	/*! The time spent in the data saving synchronization protocol */
+	ACTION_PROTOCOL_DATASAVING,
+	
+	/*! The time spent in the test protocol */
+	ACTION_PROTOCOL_TESTING,
+	
+	/*! The time spent in the bit extraction protocol */	
+	ACTION_PROTOCOL_VECTORIZED_BITEXTRACTION,
+	
+	/*! The time spent in the bitwise addition protocol */
+	ACTION_PROTOCOL_VECTORIZED_BITWISEADDITION,
 
-	// NetworkNode operations
+	/*! The time spent in the share conversion protocol */
+	ACTION_PROTOCOL_VECTORIZED_SHARECONVERSION,
 
-	/*! The SendValueVector method */
-	LOCATION_NETWORKNODE_SENDVECTOR = 1,
-	/*! The ReceiveValueVector method */
-	LOCATION_NETWORKNODE_RECEIVEVECTOR = 2,
+	/*! The time spent in the multiplication protocol */
+	ACTION_PROTOCOL_VECTORIZED_MULTIPLICATION,
 
-	/*! The ProcessIncomingVector method */
-	LOCATION_NETWORKNODE_PROCESSINCOMINGVECTOR = 3,
+	/*! The whole lifespan of a vector equality comparison protocol */
+	ACTION_PROTOCOL_VECTORIZED_EQUALITYCOMPARISON,
 
-	// Queries
-
-	/*! All methods of the vectorized multiplication query */
-	LOCATION_VECTORIZED_MULTIPLICATION_QUERY = 4,
-
-	/*! All methods of the vectorized comparison query */
-	LOCATION_VECTORIZED_EQUALITY_COMPARISON_QUERY = 5,
-
-	/*! All methods of the vectorized comparison query */
-	LOCATION_VECTORIZED_GREATER_THAN_COMPARISON_QUERY = 6,
-	// Fundamental classws
-
-	/*! The miner interface (all local queries) */
-	LOCATION_MINER_INTERFACE = 7
+	/*! The whole lifespan of a vector greater-than comparison protocol */
+	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON,
 
 };
 
@@ -102,21 +82,15 @@ public:
 	 Constructs an execution section based on the given parameters
 
 	 \param[in] actionCode a code describing what the section does (\see the ActionCodes enum)
-	 \param[in] locationCode a code describing where the section is (\see the LocationCodes enum)
 	 \param[in] complexityParameter a number describing the O(n) complexity of the section
 	 \param[in] parentSectionId the identifier of a section which contains this one
 	*/
-	ExecutionSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId);
+	ExecutionSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId);
 
 	/**
 	 Stores the action code of the section
 	*/
 	uint16 actionCode;
-
-	/**
-	 Stores the location code of the section
-	*/
-	uint16 locationCode;
 
 	/**
 	 The O(n) complexity parameter for the section
@@ -175,13 +149,12 @@ public:
 	 The profiler will store timestamps of both events and compute durations during ProcessLog invocations.
 
 	 \param[in] actionCode a value in the ActionCodes enum which specifies what is being done in the section
-	 \param[in] locationCode a value in the LocationCodes enum which specifies the location of the section in the code
 	 \param[in] complexityParameter indicates the complexity parameter for the section (eg number of values in the processed vector)
 	 \param[in] parentSectionId the identifier of a section which contains this new section (see also: PushParentSection)
 
 	 \returns an unique identifier for the profiled code section which should be passed to EndSection later on
 	*/
-	static uint32 StartSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId = 0);
+	static uint32 StartSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId = 0);
 
 	/**
 	 Completes the specified section.

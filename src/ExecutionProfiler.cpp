@@ -18,9 +18,8 @@ deque<ExecutionSection> ExecutionProfiler::sections;
 uint32 ExecutionProfiler::sectionOffset = 0;
 mutex ExecutionProfiler::profileLogMutex;
 
-ExecutionSection::ExecutionSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId) {
+ExecutionSection::ExecutionSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId) {
 	this->actionCode = actionCode;
-	this->locationCode = locationCode;
 	this->complexityParameter = complexityParameter;
 	this->parentSectionId = parentSectionId;
 }
@@ -52,7 +51,7 @@ void ExecutionProfiler::FinishLog() {
 		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
 		{
             boost::mutex::scoped_lock lock (Console::theMutex);
-            logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
+            logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		}
 		sections.pop_front ();
 		sectionOffset++;
@@ -87,7 +86,7 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
 		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
 		{
             boost::mutex::scoped_lock lock (Console::theMutex);
-            logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.locationCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
+            logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		}
 		sections.pop_front ();
 		sectionOffset++;
@@ -120,7 +119,7 @@ bool ExecutionProfiler::StartLog(string filename) {
 
         {
             boost::mutex::scoped_lock lock (Console::theMutex);
-            logfile << "SectionID" << ", " << "Start" << ", " << "End" << ", " << "Duration" << ", " << "Action" << ", " << "Location" << ", " << "Complexity" << ", " << "ParentSectionID" << endl;
+            logfile << "SectionID" << ", " << "Start" << ", " << "End" << ", " << "Duration" << ", " << "Action" << ", " << "Complexity" << ", " << "ParentSectionID" << endl;
         }
 		sectionOffset = 1;
 
@@ -135,7 +134,7 @@ bool ExecutionProfiler::StartLog(string filename) {
 }
 
 
-uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint16 locationCode, uint32 complexityParameter, uint32 parentSectionId/* = 0 */) {
+uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId/* = 0 */) {
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
 
@@ -151,13 +150,13 @@ uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint16 locationCode, u
 	}
 
 	// Create the entry and store it
-	ExecutionSection s (actionCode, locationCode, complexityParameter, usedParentSectionId);
+	ExecutionSection s (actionCode, complexityParameter, usedParentSectionId);
 	s.startTime = RakNet::GetTime ();
 	s.endTime = 0;
 	sections.push_back (s);
 
 	uint32 sectionId = (sections.size () - 1) + sectionOffset;
-	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Started section " << sectionId << " (" << actionCode << ", " << locationCode << ", " << complexityParameter << ", " << parentSectionId << ").");
+	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Started section " << sectionId << " (" << actionCode << ", " << complexityParameter << ", " << parentSectionId << ").");
 
 	return sectionId;
 }
