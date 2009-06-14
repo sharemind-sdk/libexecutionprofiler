@@ -262,6 +262,9 @@ private:
 	*/
 	static uint32 sectionOffset;
 
+	/**
+	 The lock for the profiling log
+	*/
 	static mutex profileLogMutex;
 
 };
