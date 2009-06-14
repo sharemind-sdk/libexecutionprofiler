@@ -65,7 +65,7 @@ enum ActionCodes {
 	ACTION_PROTOCOL_VECTORIZED_EQUALITYCOMPARISON,
 
 	/*! The whole lifespan of a vector greater-than comparison protocol */
-	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON,
+	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON
 
 };
 
@@ -239,6 +239,11 @@ private:
 	 The lock for the profiling log
 	*/
 	static mutex profileLogMutex;
+	
+	/**
+	 True, if we have profiling enabled
+	 */
+	static bool enableProfiling;
 
 };
 

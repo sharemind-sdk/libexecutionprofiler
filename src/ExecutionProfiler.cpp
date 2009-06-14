@@ -17,6 +17,7 @@ string ExecutionProfiler::filename;
 deque<ExecutionSection> ExecutionProfiler::sections;
 uint32 ExecutionProfiler::sectionOffset = 0;
 mutex ExecutionProfiler::profileLogMutex;
+bool ExecutionProfiler::enableProfiling;
 
 ExecutionSection::ExecutionSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId) {
 	this->actionCode = actionCode;
@@ -26,6 +27,9 @@ ExecutionSection::ExecutionSection(uint16 actionCode, uint32 complexityParameter
 
 
 void ExecutionProfiler::EndSection(uint32 sectionId) {
+	if (!enableProfiling)
+		return;
+	
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
 
@@ -39,6 +43,9 @@ void ExecutionProfiler::EndSection(uint32 sectionId) {
 
 
 void ExecutionProfiler::FinishLog() {
+	if (!enableProfiling)
+		return;
+	
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
 
@@ -66,6 +73,9 @@ void ExecutionProfiler::FinishLog() {
 
 
 void ExecutionProfiler::PopParentSection() {
+	if (!enableProfiling)
+		return;
+	
 	// Lock the list
 	boost::mutex::scoped_lock lock  (profileLogMutex);
 
@@ -75,6 +85,9 @@ void ExecutionProfiler::PopParentSection() {
 
 
 void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
+	if (!enableProfiling)
+		return;
+
 	// Lock the list
 	boost::mutex::scoped_lock lock  (profileLogMutex);
 
@@ -95,6 +108,9 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
 
 
 void ExecutionProfiler::PushParentSection(uint32 sectionId) {
+	if (!enableProfiling)
+		return;
+	
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
 	sectionStack.push (sectionId);
@@ -123,6 +139,7 @@ bool ExecutionProfiler::StartLog(string filename) {
         }
 		sectionOffset = 1;
 
+		enableProfiling = true;
 		return true;
 
 	} else {
@@ -135,6 +152,9 @@ bool ExecutionProfiler::StartLog(string filename) {
 
 
 uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId/* = 0 */) {
+	if (!enableProfiling)
+		return 0;
+	
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
 
