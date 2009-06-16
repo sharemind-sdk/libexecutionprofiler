@@ -11,11 +11,13 @@
 
 #include <stack>
 #include <deque>
+#include <iostream>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 using std::stack;
 using std::deque;
+using std::ofstream;
 using boost::mutex;
 
 /*! The codes describing actions performed in an execution section.
@@ -26,46 +28,49 @@ enum ActionCodes {
 	// NetworkNode actions
 
 	/*! The time spent to receive strings */
-	ACTION_RECEIVE_STRING,
+	ACTION_RECEIVE_STRING = 1,
 	
 	/*! The time spent to receive values */
-	ACTION_RECEIVE_VALUE,
+	ACTION_RECEIVE_VALUE = 2,
 
 	/*! The time spent to receive value vectors */
-	ACTION_RECEIVE_VALUE_VECTOR,
+	ACTION_RECEIVE_VALUE_VECTOR = 3,
 
 	/*! The time spent to flush outgoing network messages */
-	ACTION_FLUSH_NETWORK,
+	ACTION_FLUSH_NETWORK = 4,
 	
 	/*! The time spent to send messages in the controller sessions' outgoing queues */
-	ACTION_PROCESS_OUTGOING_QUEUES,
+	ACTION_PROCESS_OUTGOING_QUEUES = 5,
 
 	/*! The time spent to process and distribute incoming messages */
-	ACTION_PROCESS_INCOMING_PACKETS,
+	ACTION_PROCESS_INCOMING_PACKETS = 6,
 
 	/*! The time spent in the data saving synchronization protocol */
-	ACTION_PROTOCOL_DATASAVING,
+	ACTION_PROTOCOL_DATASAVING = 7,
 	
 	/*! The time spent in the test protocol */
-	ACTION_PROTOCOL_TESTING,
+	ACTION_PROTOCOL_TESTING = 8,
 	
 	/*! The time spent in the bit extraction protocol */	
-	ACTION_PROTOCOL_VECTORIZED_BITEXTRACTION,
+	ACTION_PROTOCOL_VECTORIZED_BITEXTRACTION = 9,
 	
 	/*! The time spent in the bitwise addition protocol */
-	ACTION_PROTOCOL_VECTORIZED_BITWISEADDITION,
+	ACTION_PROTOCOL_VECTORIZED_BITWISEADDITION = 10,
 
 	/*! The time spent in the share conversion protocol */
-	ACTION_PROTOCOL_VECTORIZED_SHARECONVERSION,
+	ACTION_PROTOCOL_VECTORIZED_SHARECONVERSION = 11,
 
 	/*! The time spent in the multiplication protocol */
-	ACTION_PROTOCOL_VECTORIZED_MULTIPLICATION,
+	ACTION_PROTOCOL_VECTORIZED_MULTIPLICATION = 12,
 
 	/*! The whole lifespan of a vector equality comparison protocol */
-	ACTION_PROTOCOL_VECTORIZED_EQUALITYCOMPARISON,
+	ACTION_PROTOCOL_VECTORIZED_EQUALITYCOMPARISON = 13,
 
 	/*! The whole lifespan of a vector greater-than comparison protocol */
-	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON
+	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON = 14,
+
+	/*! Randomness generation */
+	ACTION_RANDOMNESS_GENERATION = 15
 
 };
 
@@ -180,7 +185,7 @@ public:
 	 \param[in] timeLimitMs the number of milliseconds allowed for flushing sections to the file.
 	 If this is zero, no sections are flushed. The default value for this parameter is 10.
 	*/
-	static void ProcessLog(uint32 timeLimitMs = 10);
+	static void ProcessLog(uint32 timeLimitMs = 10, bool flush = false);
 
 	/**
 	 Specifies a default parent section for subsequent sections.

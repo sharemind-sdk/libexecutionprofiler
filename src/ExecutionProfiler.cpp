@@ -84,7 +84,7 @@ void ExecutionProfiler::PopParentSection() {
 }
 
 
-void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
+void ExecutionProfiler::ProcessLog(uint32 timeLimitMs, bool flush) {
 	if (!enableProfiling)
 		return;
 
@@ -94,7 +94,11 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs/* = 10 */) {
 	uint32 start = RakNet::GetTime ();
 	uint32 end = start + timeLimitMs;
 
-	while (RakNet::GetTime () < end && sections.size () > 0) {
+	uint32 leaveSections = 0;
+	if (!flush)
+		leaveSections = 10000;
+		
+	while (RakNet::GetTime () < end && sections.size () > leaveSections) {
 		ExecutionSection s = sections.front ();
 		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
 		{
