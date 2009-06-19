@@ -34,7 +34,7 @@ void ExecutionProfiler::EndSection(uint32 sectionId) {
 	boost::mutex::scoped_lock lock (profileLogMutex);
 
 	if ((sectionId - sectionOffset) >= sections.size ()) {
-		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] Can not find section to end. Requested section ID " << sectionId << " with offset " << sectionOffset << ".");
+		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] ERROR: Profiler can not find section to end. Requested section ID " << sectionId << " with offset " << sectionOffset << ".");
 		return;
 	}
 
