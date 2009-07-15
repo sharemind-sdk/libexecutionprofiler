@@ -96,7 +96,7 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs, bool flush) {
 
 	uint32 leaveSections = 0;
 	if (!flush)
-		leaveSections = 10000;
+		leaveSections = 100000;
 		
 	while (RakNet::GetTime () < end && sections.size () > leaveSections) {
 		ExecutionSection s = sections.front ();
