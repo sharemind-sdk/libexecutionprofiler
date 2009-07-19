@@ -70,7 +70,10 @@ enum ActionCodes {
 	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON = 14,
 
 	/*! Randomness generation */
-	ACTION_RANDOMNESS_GENERATION = 15
+	ACTION_RANDOMNESS_GENERATION = 15,
+
+	/*! The execution of a script */
+	ACTION_SCRIPT_EXECUTION = 16
 
 };
 
