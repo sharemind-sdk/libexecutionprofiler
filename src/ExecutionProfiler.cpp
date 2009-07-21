@@ -15,9 +15,10 @@ ofstream ExecutionProfiler::logfile;
 stack<uint32> ExecutionProfiler::sectionStack;
 string ExecutionProfiler::filename;
 deque<ExecutionSection> ExecutionProfiler::sections;
-uint32 ExecutionProfiler::sectionOffset = 0;
+map<uint32, ExecutionSection> ExecutionProfiler::sectionMap;
 mutex ExecutionProfiler::profileLogMutex;
 bool ExecutionProfiler::enableProfiling;
+uint32 ExecutionProfiler::nextSectionId = 0;
 
 ExecutionSection::ExecutionSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId) {
 	this->actionCode = actionCode;
@@ -32,13 +33,16 @@ void ExecutionProfiler::EndSection(uint32 sectionId) {
 	
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
-
-	if ((sectionId - sectionOffset) >= sections.size ()) {
-		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] ERROR: Profiler can not find section to end. Requested section ID " << sectionId << " with offset " << sectionOffset << ".");
+	
+	map<uint32, ExecutionSection>::iterator it = sectionMap.find (sectionId);
+	if (it == sectionMap.end ()) {
+		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] Could not end section " << sectionId << ". Not in queue.");
 		return;
 	}
 
-	sections[sectionId - sectionOffset].endTime = RakNet::GetTime ();
+	it->second.endTime = RakNet::GetTime ();
+	sections.push_back (it->second);
+	sectionMap.erase (it);
 }
 
 
@@ -55,13 +59,12 @@ void ExecutionProfiler::FinishLog() {
 	while (sections.size () > 0) {
 		// Give time in one-second slices
 		ExecutionSection s = sections.front ();
-		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
+		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
 		{
             boost::mutex::scoped_lock lock (Console::theMutex);
-            logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
+            logfile << s.sectionId << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		}
 		sections.pop_front ();
-		sectionOffset++;
 	}
 
 	// Close the log file, if necessary
@@ -95,18 +98,21 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs, bool flush) {
 	uint32 end = start + timeLimitMs;
 
 	uint32 leaveSections = 0;
+
+	// The new design does not require flushing
+	/*
 	if (!flush)
 		leaveSections = 100000;
+	*/
 		
 	while (RakNet::GetTime () < end && sections.size () > leaveSections) {
 		ExecutionSection s = sections.front ();
-		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << sectionOffset << ".");
+		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
 		{
             boost::mutex::scoped_lock lock (Console::theMutex);
-            logfile << sectionOffset << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
+            logfile << s.sectionId << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		}
 		sections.pop_front ();
-		sectionOffset++;
 	}
 }
 
@@ -141,7 +147,6 @@ bool ExecutionProfiler::StartLog(string filename) {
             boost::mutex::scoped_lock lock (Console::theMutex);
             logfile << "SectionID" << ", " << "Start" << ", " << "End" << ", " << "Duration" << ", " << "Action" << ", " << "Complexity" << ", " << "ParentSectionID" << endl;
         }
-		sectionOffset = 1;
 
 		enableProfiling = true;
 		return true;
@@ -149,7 +154,7 @@ bool ExecutionProfiler::StartLog(string filename) {
 	} else {
 
 		// We didn't get a filename so spread the information about that.
-		WRITE_TO_LOG (LOG_MINIMAL, "[Console] ERROR: Empty log file name!");
+		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler]  ERROR: Empty log file name!");
 		return false;
 	}
 }
@@ -162,10 +167,7 @@ uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint32 complexityParam
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
 
-	if (parentSectionId > sectionOffset + (sections.size () - 1)) {
-		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] WARNING: The specified parent section " << parentSectionId << " does not exist!");
-	}
-
+	// Automatically set parent
 	uint32 usedParentSectionId = parentSectionId;
 	if (parentSectionId == 0) {
 		if (sectionStack.size () > 0) {
@@ -177,10 +179,11 @@ uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint32 complexityParam
 	ExecutionSection s (actionCode, complexityParameter, usedParentSectionId);
 	s.startTime = RakNet::GetTime ();
 	s.endTime = 0;
-	sections.push_back (s);
+	s.sectionId = nextSectionId;
+	sectionMap.insert (make_pair (s.sectionId, s));
+	nextSectionId++;
 
-	uint32 sectionId = (sections.size () - 1) + sectionOffset;
-	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Started section " << sectionId << " (" << actionCode << ", " << complexityParameter << ", " << parentSectionId << ").");
+	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Started section " << s.sectionId << ".");
 
-	return sectionId;
+	return s.sectionId;
 }

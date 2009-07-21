@@ -11,11 +11,13 @@
 
 #include <stack>
 #include <deque>
+#include <map>
 #include <iostream>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 using std::stack;
+using std::map;
 using std::deque;
 using std::ofstream;
 using boost::mutex;
@@ -110,6 +112,11 @@ public:
 	*/
 	uint32 endTime;
 
+	/**
+	 The identifier of this section
+	*/
+	uint32 sectionId;
+	
 	/**
 	 The identifier of the parent section containing this one (zero, if none)
 	*/
@@ -228,6 +235,9 @@ private:
 	*/
 	static stack<uint32> sectionStack;
 
+	static map<uint32, ExecutionSection> sectionMap;
+
+
 	/**
 	 The name of the logfile to use
 	*/
@@ -241,7 +251,7 @@ private:
 	/**
 	 The next available section identifier
 	*/
-	static uint32 sectionOffset;
+	static uint32 nextSectionId;
 
 	/**
 	 The lock for the profiling log
