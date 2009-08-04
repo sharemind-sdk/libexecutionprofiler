@@ -75,7 +75,10 @@ enum ActionCodes {
 	ACTION_RANDOMNESS_GENERATION = 15,
 
 	/*! The execution of a script */
-	ACTION_SCRIPT_EXECUTION = 16
+	ACTION_SCRIPT_EXECUTION = 16,
+
+	/*! Various database I/O operations */
+	ACTION_DATABASE_IO = 17
 
 };
 
