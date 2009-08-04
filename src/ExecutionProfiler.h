@@ -78,7 +78,10 @@ enum ActionCodes {
 	ACTION_SCRIPT_EXECUTION = 16,
 
 	/*! Various database I/O operations */
-	ACTION_DATABASE_IO = 17
+	ACTION_DATABASE_IO = 17,
+
+	/*! Sharing and publishing of values within the VM */
+	ACTION_SHARING_AND_PUBLISHING = 18
 
 };
 
