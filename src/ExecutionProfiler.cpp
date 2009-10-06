@@ -1,7 +1,9 @@
 /*
  * This file is a part of the Sharemind framework.
  *
- * Copyright (C) AS Cybernetica, 2006-2009
+ * Copyright (C) AS Cybernetica
+ * All rights are reserved. Reproduction in whole or part is prohibited
+ * without the written consent of the copyright owner.
  *
  * Main contributors:
  * Dan Bogdanov (dan@cyber.ee)
