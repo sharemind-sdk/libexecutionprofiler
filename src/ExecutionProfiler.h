@@ -22,6 +22,7 @@ using std::stack;
 using std::map;
 using std::deque;
 using std::ofstream;
+using std::string;
 using boost::mutex;
 
 /*! The codes describing actions performed in an execution section.
@@ -202,6 +203,7 @@ public:
 
 	 \param[in] timeLimitMs the number of milliseconds allowed for flushing sections to the file.
 	 If this is zero, no sections are flushed. The default value for this parameter is 10.
+	 \param[in] flush if true, flushes the sections, false by default
 	*/
 	static void ProcessLog(uint32 timeLimitMs = 10, bool flush = false);
 
@@ -218,7 +220,6 @@ public:
 
 	 \param[in] sectionId the id of the section to be used as a parent for subsequent sections
 	*/
-public:
 	static void PushParentSection(uint32 sectionId);
 
 
@@ -243,8 +244,12 @@ private:
 	*/
 	static stack<uint32> sectionStack;
 
+	/**
+	 The map of execution sections
+	 
+	 \see PushParentSection
+	 */
 	static map<uint32, ExecutionSection> sectionMap;
-
 
 	/**
 	 The name of the logfile to use

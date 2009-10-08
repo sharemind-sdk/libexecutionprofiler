@@ -11,6 +11,7 @@
 
 #include "GetTime.h"
 #include "common/CommonLibrary.h"
+using namespace std;
 
 // Initialize static variables
 ofstream ExecutionProfiler::logfile;
