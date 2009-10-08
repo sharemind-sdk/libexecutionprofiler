@@ -10,7 +10,7 @@
  */
 
 #include "GetTime.h"
-#include "Sharemind.h"
+#include "common/CommonLibrary.h"
 
 // Initialize static variables
 ofstream ExecutionProfiler::logfile;
