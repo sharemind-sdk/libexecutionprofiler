@@ -84,7 +84,9 @@ enum ActionCodes {
 	ACTION_DATABASE_IO = 17,
 
 	/*! Sharing and publishing of values within the VM */
-	ACTION_SHARING_AND_PUBLISHING = 18
+	ACTION_SHARING_AND_PUBLISHING = 18,
+
+	ACTION_VECTOR_MANAGEMENT = 19
 
 };
 
