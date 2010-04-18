@@ -18,12 +18,42 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/foreach.hpp>
+#include <boost/unordered_map.hpp>
+#include <fstream>
+using std::ofstream;
+using boost::unordered_map;
 using std::stack;
 using std::map;
 using std::deque;
 using std::ofstream;
 using std::string;
 using boost::mutex;
+
+typedef boost::unordered_map<std::string, int> timingmap;
+
+//#define USE_PROFILING
+
+#ifdef USE_PROFILING
+	#define START_PROFILE_SECTION(x, type, parameter)\
+		uint32 x = ExecutionProfiler::StartSection (type, parameter);
+	#define END_PROFILE_SECTION(x)\
+		ExecutionProfiler::EndSection(x);
+	#define START_INSTRUCTION_TIMER(x, instruction)\
+		uint32 x = RakNet::GetTime ();
+	#define END_INSTRUCTION_TIMER(x)\
+		ExecutionProfiler::logInstructionTime (instructionToExecute->OpName(), RakNet::GetTime() - start);
+	#define DUMP_INSTRUCTION_TIMINGS(filename)\
+		ExecutionProfiler::dumpInstructionTimings (filename);
+#else
+	#define START_PROFILE_SECTION(x, type, parameter)
+	#define END_PROFILE_SECTION(x)
+	#define START_INSTRUCTION_TIMER(x, instruction)
+	#define END_INSTRUCTION_TIMER(x)
+	#define DUMP_INSTRUCTION_TIMINGS(filename)
+#endif
+
+
 
 /*! The codes describing actions performed in an execution section.
 They are specified numerically, because the ProfileLogAnalyst tool
@@ -233,9 +263,16 @@ public:
 	 If the stack is empty, nothing is done.
 	*/
 	static void PopParentSection();
-
+	
+	static void logInstructionTime (const string& name, uint32 time);
+	
+	static void dumpInstructionTimings (const string& filename);
+	
 private:
 
+	static timingmap m_instructionTimings;
+	
+	
 	/**
 	 Handle of the file we write the profiling log to
 	*/

@@ -22,6 +22,7 @@ map<uint32, ExecutionSection> ExecutionProfiler::sectionMap;
 mutex ExecutionProfiler::profileLogMutex;
 bool ExecutionProfiler::enableProfiling;
 uint32 ExecutionProfiler::nextSectionId = 0;
+timingmap ExecutionProfiler::m_instructionTimings;
 
 ExecutionSection::ExecutionSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId) {
 	this->actionCode = actionCode;
@@ -189,4 +190,22 @@ uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint32 complexityParam
 	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Started section " << s.sectionId << ".");
 
 	return s.sectionId;
+}
+
+void ExecutionProfiler::logInstructionTime (const string& name, uint32 time) {
+	uint32 a = 0;
+	if (m_instructionTimings.find(name) != m_instructionTimings.end())
+		a = m_instructionTimings.at(name);
+	a += time;
+	m_instructionTimings[name] = a;
+}
+
+void ExecutionProfiler::dumpInstructionTimings (const string& filename) {
+	ofstream f (filename.c_str());
+	f << "Op\tTime" << endl;
+	BOOST_FOREACH(timingmap::value_type i, m_instructionTimings) {
+		f << i.first<< "\t" <<i.second<< endl;
+	}
+	f.close ();
+	WRITE_LOG_NORMAL("Logged script execution profile to " << filename << ".");
 }
