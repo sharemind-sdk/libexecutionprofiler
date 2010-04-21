@@ -32,7 +32,7 @@ using boost::mutex;
 
 typedef boost::unordered_map<std::string, int> timingmap;
 
-//#define USE_PROFILING
+#define USE_PROFILING
 
 #ifdef USE_PROFILING
 	#define START_PROFILE_SECTION(x, type, parameter)\
@@ -42,7 +42,7 @@ typedef boost::unordered_map<std::string, int> timingmap;
 	#define START_INSTRUCTION_TIMER(x, instruction)\
 		uint32 x = RakNet::GetTime ();
 	#define END_INSTRUCTION_TIMER(x)\
-		ExecutionProfiler::logInstructionTime (instructionToExecute->OpName(), RakNet::GetTime() - start);
+		ExecutionProfiler::logInstructionTime (instructionToExecute->OpName(), RakNet::GetTime() - x);
 	#define DUMP_INSTRUCTION_TIMINGS(filename)\
 		ExecutionProfiler::dumpInstructionTimings (filename);
 #else
@@ -118,7 +118,10 @@ enum ActionCodes {
 
 	ACTION_VECTOR_MANAGEMENT = 19,
 	
-	ACTION_EXPRESSION_MANAGEMENT = 20
+	ACTION_EXPRESSION_MANAGEMENT = 20,
+	
+	ACTION_EXPRESSION_EVALUATION = 21
+
 
 };
 
