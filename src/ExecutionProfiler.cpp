@@ -23,6 +23,8 @@ mutex ExecutionProfiler::profileLogMutex;
 bool ExecutionProfiler::enableProfiling;
 uint32 ExecutionProfiler::nextSectionId = 0;
 timingmap ExecutionProfiler::m_instructionTimings;
+Console* ExecutionProfiler::m_console;
+
 
 ExecutionSection::ExecutionSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId) {
 	this->actionCode = actionCode;
@@ -34,13 +36,13 @@ ExecutionSection::ExecutionSection(uint16 actionCode, uint32 complexityParameter
 void ExecutionProfiler::EndSection(uint32 sectionId) {
 	if (!enableProfiling)
 		return;
-	
+
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
-	
+
 	map<uint32, ExecutionSection>::iterator it = sectionMap.find (sectionId);
 	if (it == sectionMap.end ()) {
-		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] Could not end section " << sectionId << ". Not in queue.");
+		WRITE_LOG_ERROR (m_console, "[ExecutionProfiler] Could not end section " << sectionId << ". Not in queue.");
 		return;
 	}
 
@@ -53,19 +55,19 @@ void ExecutionProfiler::EndSection(uint32 sectionId) {
 void ExecutionProfiler::FinishLog() {
 	if (!enableProfiling)
 		return;
-	
+
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
 
-	WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Flushing profiling log file.");
+	WRITE_LOG_DEBUG (m_console, "[ExecutionProfiler] Flushing profiling log file.");
 
 	// Flush all sections to the disc
 	while (sections.size () > 0) {
 		// Give time in one-second slices
 		ExecutionSection s = sections.front ();
-		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
+		//WRITE_LOG_FULLDEBUG (m_console, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
 		{
-            boost::mutex::scoped_lock lock (Console::theMutex);
+            boost::mutex::scoped_lock lock (m_console->getStreamMutex());
             logfile << s.sectionId << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		}
 		sections.pop_front ();
@@ -73,7 +75,7 @@ void ExecutionProfiler::FinishLog() {
 
 	// Close the log file, if necessary
 	if (logfile.is_open ()) {
-		WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Closing log file " << filename);
+		WRITE_LOG_DEBUG (m_console, "[ExecutionProfiler] Closing log file " << filename);
 		logfile.close ();
 	}
 }
@@ -82,7 +84,7 @@ void ExecutionProfiler::FinishLog() {
 void ExecutionProfiler::PopParentSection() {
 	if (!enableProfiling)
 		return;
-	
+
 	// Lock the list
 	boost::mutex::scoped_lock lock  (profileLogMutex);
 
@@ -108,12 +110,12 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs, bool flush) {
 	if (!flush)
 		leaveSections = 100000;
 	*/
-		
+
 	while (RakNet::GetTime () < end && sections.size () > leaveSections) {
 		ExecutionSection s = sections.front ();
-		//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
+		//WRITE_LOG_FULLDEBUG (m_console, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
 		{
-            boost::mutex::scoped_lock lock (Console::theMutex);
+            boost::mutex::scoped_lock lock (m_console->getStreamMutex());
             logfile << s.sectionId << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		}
 		sections.pop_front ();
@@ -124,7 +126,7 @@ void ExecutionProfiler::ProcessLog(uint32 timeLimitMs, bool flush) {
 void ExecutionProfiler::PushParentSection(uint32 sectionId) {
 	if (!enableProfiling)
 		return;
-	
+
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
 	sectionStack.push (sectionId);
@@ -141,14 +143,14 @@ bool ExecutionProfiler::StartLog(string filename) {
 		// Try to open the log file
 		logfile.open (filename.c_str ());
 		if (logfile.bad() || logfile.fail ()) {
-			WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler] ERROR: Can't open console log file " << filename << "!");
+			WRITE_LOG_ERROR (m_console, "[ExecutionProfiler] ERROR: Can't open console log file " << filename << "!");
 			return false;
 		}
 
-		WRITE_TO_LOG (LOG_DEBUG, "[ExecutionProfiler] Opened profiling log file " << filename << "!");
+		WRITE_LOG_DEBUG (m_console, "[ExecutionProfiler] Opened profiling log file " << filename << "!");
 
         {
-            boost::mutex::scoped_lock lock (Console::theMutex);
+            boost::mutex::scoped_lock lock (m_console->getStreamMutex());
             logfile << "SectionID" << ", " << "Start" << ", " << "End" << ", " << "Duration" << ", " << "Action" << ", " << "Complexity" << ", " << "ParentSectionID" << endl;
         }
 
@@ -158,7 +160,7 @@ bool ExecutionProfiler::StartLog(string filename) {
 	} else {
 
 		// We didn't get a filename so spread the information about that.
-		WRITE_TO_LOG (LOG_MINIMAL, "[ExecutionProfiler]  ERROR: Empty log file name!");
+		WRITE_LOG_ERROR (m_console, "[ExecutionProfiler]  ERROR: Empty log file name!");
 		return false;
 	}
 }
@@ -167,7 +169,7 @@ bool ExecutionProfiler::StartLog(string filename) {
 uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId/* = 0 */) {
 	if (!enableProfiling)
 		return 0;
-	
+
 	// Lock the list
 	boost::mutex::scoped_lock lock (profileLogMutex);
 
@@ -187,7 +189,7 @@ uint32 ExecutionProfiler::StartSection(uint16 actionCode, uint32 complexityParam
 	sectionMap.insert (make_pair (s.sectionId, s));
 	nextSectionId++;
 
-	//WRITE_TO_LOG (LOG_FULLDEBUG, "[ExecutionProfiler] Started section " << s.sectionId << ".");
+	//WRITE_LOG_FULLDEBUG (m_console, "[ExecutionProfiler] Started section " << s.sectionId << ".");
 
 	return s.sectionId;
 }
@@ -207,5 +209,5 @@ void ExecutionProfiler::dumpInstructionTimings (const string& filename) {
 		f << i.first<< "\t" <<i.second<< endl;
 	}
 	f.close ();
-	WRITE_LOG_NORMAL("Logged script execution profile to " << filename << ".");
+	WRITE_LOG_NORMAL(m_console, "Logged script execution profile to " << filename << ".");
 }

@@ -30,6 +30,8 @@ using std::ofstream;
 using std::string;
 using boost::mutex;
 
+class Console;
+
 typedef boost::unordered_map<std::string, int> timingmap;
 
 #define USE_PROFILING
@@ -270,6 +272,8 @@ public:
 	static void logInstructionTime (const string& name, uint32 time);
 	
 	static void dumpInstructionTimings (const string& filename);
+	
+	static Console* m_console;
 	
 private:
 
