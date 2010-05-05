@@ -34,25 +34,49 @@ class Console;
 
 typedef boost::unordered_map<std::string, int> timingmap;
 
-#define USE_PROFILING
+//#define PROFILE_APP
+//#define PROFILE_VM
 
-#ifdef USE_PROFILING
-	#define START_PROFILE_SECTION(x, type, parameter)\
-		uint32 x = ExecutionProfiler::StartSection (type, parameter);
-	#define END_PROFILE_SECTION(x)\
-		ExecutionProfiler::EndSection(x);
-	#define START_INSTRUCTION_TIMER(x, instruction)\
-		uint32 x = RakNet::GetTime ();
-	#define END_INSTRUCTION_TIMER(x)\
-		ExecutionProfiler::logInstructionTime (instructionToExecute->OpName(), RakNet::GetTime() - x);
-	#define DUMP_INSTRUCTION_TIMINGS(filename)\
-		ExecutionProfiler::dumpInstructionTimings (filename);
+#if defined(PROFILE_APP) || defined(PROFILE_VM)
+	#define PUSH_PARENT_SECTION(profiler, section)\
+		if (profiler) (profiler)->pushParentSection(section);
+	#define POP_PARENT_SECTION(profiler)\
+		if (profiler) (profiler)->popParentSection();
+	#define PROCESS_SECTIONS(profiler, time)\
+		if (profiler) (profiler)->processLog(time);
 #else
-	#define START_PROFILE_SECTION(x, type, parameter)
-	#define END_PROFILE_SECTION(x)
-	#define START_INSTRUCTION_TIMER(x, instruction)
-	#define END_INSTRUCTION_TIMER(x)
-	#define DUMP_INSTRUCTION_TIMINGS(filename)
+	#define PUSH_PARENT_SECTION(profiler, section)
+	#define POP_PARENT_SECTION(profiler)
+	#define PROCESS_SECTIONS(profiler, time)
+#endif
+
+#ifdef PROFILE_VM
+	#define START_SECTION_VM(profiler, x, type, parameter)\
+		uint32 x = 0; if (profiler) x = (profiler)->startSection (type, parameter);
+	#define END_SECTION_VM(profiler, x)\
+		if (profiler) (profiler)->endSection(x);
+#else
+	#define START_SECTION_VM(profiler, x, type, parameter)
+	#define END_SECTION_VM(profiler, x)
+#endif
+
+#ifdef PROFILE_APP
+	#define START_SECTION_APP(profiler, x, type, parameter)\
+		uint32 x = 0; if (profiler) x = (profiler)->startSection (type, parameter);
+	#define END_SECTION_APP(profiler, x)\
+		if (profiler) (profiler)->endSection(x);
+	#define START_INSTRUCTION_TIMER(profiler, x, instruction)\
+		uint32 x = 0; if (profiler) x = RakNet::GetTime ();
+	#define END_INSTRUCTION_TIMER(profiler, x)\
+		if (profiler) (profiler)->logInstructionTime (instructionToExecute->OpName(), RakNet::GetTime() - x);
+	#define DUMP_INSTRUCTION_TIMINGS(profiler, filename)\
+		if (profiler) (profiler)->dumpInstructionTimings (filename);
+#else
+	#define START_SECTION_APP(profiler, x, type, parameter)
+	#define END_SECTION_APP(profiler, x)
+	#define START_INSTRUCTION_TIMER(profiler, x, instruction)
+	#define END_INSTRUCTION_TIMER(profiler, x)
+	#define DUMP_INSTRUCTION_TIMINGS(profiler, filename)
 #endif
 
 
@@ -61,7 +85,7 @@ typedef boost::unordered_map<std::string, int> timingmap;
 They are specified numerically, because the ProfileLogAnalyst tool
 relies on these numbers right now. */
 enum ActionCodes {
-
+	
 	// NetworkNode actions
 
 	/*! The time spent to receive strings */
@@ -193,6 +217,10 @@ class ExecutionProfiler {
 
 public:
 
+	ExecutionProfiler (Console* console);
+	
+	~ExecutionProfiler();
+	
 	/**
 	 Starts the profiler by specifying a log file to write sections into.
 
@@ -203,7 +231,7 @@ public:
 	 \retval true if opening the file was successful
 	 \retval false if opening the file failed
 	*/
-	static bool StartLog(string filename);
+	bool startLog(const string &filename);
 
 	/**
 	 Specifies the starting point of a code section for profiling.
@@ -217,7 +245,7 @@ public:
 
 	 \returns an unique identifier for the profiled code section which should be passed to EndSection later on
 	*/
-	static uint32 StartSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId = 0);
+	uint32 startSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId = 0);
 
 	/**
 	 Completes the specified section.
@@ -227,12 +255,12 @@ public:
 
 	 \param[in] sectionId the id returned by StartSection. If no such section has been started, the method does nothing.
 	*/
-	static void EndSection(uint32 sectionId);
+	void endSection(uint32 sectionId);
 
 	/**
 	 Finishes profiling and writes or cached section to the log file.
 	*/
-	static void FinishLog();
+	void finishLog();
 
 	/**
 	 Processes and logs sections cached in memory.
@@ -244,7 +272,7 @@ public:
 	 If this is zero, no sections are flushed. The default value for this parameter is 10.
 	 \param[in] flush if true, flushes the sections, false by default
 	*/
-	static void ProcessLog(uint32 timeLimitMs = 10, bool flush = false);
+	void processLog(uint32 timeLimitMs = 10, bool flush = false);
 
 	/**
 	 Specifies a default parent section for subsequent sections.
@@ -259,7 +287,7 @@ public:
 
 	 \param[in] sectionId the id of the section to be used as a parent for subsequent sections
 	*/
-	static void PushParentSection(uint32 sectionId);
+	void pushParentSection(uint32 sectionId);
 
 
 	/**
@@ -267,62 +295,62 @@ public:
 
 	 If the stack is empty, nothing is done.
 	*/
-	static void PopParentSection();
+	void popParentSection();
 	
-	static void logInstructionTime (const string& name, uint32 time);
+	void logInstructionTime (const string& name, uint32 time);
 	
-	static void dumpInstructionTimings (const string& filename);
-	
-	static Console* m_console;
-	
+	void dumpInstructionTimings (const string& filename);
+		
 private:
 
-	static timingmap m_instructionTimings;
+	Console* m_console;
+
+	timingmap m_instructionTimings;
 	
 	
 	/**
 	 Handle of the file we write the profiling log to
 	*/
-	static ofstream logfile;
+	ofstream m_logfile;
 
 	/**
 	 The stack of parent section identifiers.
 
 	 \see PushParentSection
 	*/
-	static stack<uint32> sectionStack;
+	stack<uint32> m_sectionStack;
 
 	/**
 	 The map of execution sections
 	 
 	 \see PushParentSection
 	 */
-	static map<uint32, ExecutionSection> sectionMap;
+	map<uint32, ExecutionSection> m_sectionMap;
 
 	/**
 	 The name of the logfile to use
 	*/
-	static string filename;
+	string m_filename;
 
 	/**
 	 The cache of sections waiting for flushing to the disk
 	*/
-	static deque<ExecutionSection> sections;
+	deque<ExecutionSection> m_sections;
 
 	/**
 	 The next available section identifier
 	*/
-	static uint32 nextSectionId;
+	uint32 m_nextSectionId;
 
 	/**
 	 The lock for the profiling log
 	*/
-	static mutex profileLogMutex;
+	mutex m_profileLogMutex;
 	
 	/**
 	 True, if we have profiling enabled
 	 */
-	static bool enableProfiling;
+	bool m_enableProfiling;
 
 };
 
