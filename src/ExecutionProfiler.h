@@ -34,8 +34,8 @@ class Console;
 
 typedef boost::unordered_map<std::string, int> timingmap;
 
-//#define PROFILE_APP
-//#define PROFILE_VM
+#define PROFILE_APP
+#define PROFILE_VM
 
 #if defined(PROFILE_APP) || defined(PROFILE_VM)
 	#define PUSH_PARENT_SECTION(profiler, section)\
@@ -124,30 +124,38 @@ enum ActionCodes {
 	/*! The time spent in the multiplication protocol */
 	ACTION_PROTOCOL_VECTORIZED_MULTIPLICATION = 12,
 
+	/*! The time spent in the division protocol */
+	ACTION_PROTOCOL_VECTORIZED_DIVISION = 13,
+
+	/*! The time spent in the remainder computation protocol */
+	ACTION_PROTOCOL_VECTORIZED_REMAINDER = 14,
+
+	/*! The time spent in the multiplication protocol */
+	ACTION_PROTOCOL_VECTORIZED_SHIFTRIGHT = 15,
+
 	/*! The whole lifespan of a vector equality comparison protocol */
-	ACTION_PROTOCOL_VECTORIZED_EQUALITYCOMPARISON = 13,
+	ACTION_PROTOCOL_VECTORIZED_EQUALITYCOMPARISON = 16,
 
 	/*! The whole lifespan of a vector greater-than comparison protocol */
-	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON = 14,
+	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON = 17,
 
 	/*! Randomness generation */
-	ACTION_RANDOMNESS_GENERATION = 15,
+	ACTION_RANDOMNESS_GENERATION = 18,
 
 	/*! The execution of a script */
-	ACTION_SCRIPT_EXECUTION = 16,
+	ACTION_SCRIPT_EXECUTION = 19,
 
 	/*! Various database I/O operations */
-	ACTION_DATABASE_IO = 17,
+	ACTION_DATABASE_IO = 20,
 
 	/*! Sharing and publishing of values within the VM */
-	ACTION_SHARING_AND_PUBLISHING = 18,
+	ACTION_SHARING_AND_PUBLISHING = 21,
 
-	ACTION_VECTOR_MANAGEMENT = 19,
+	ACTION_VECTOR_MANAGEMENT = 22,
 	
-	ACTION_EXPRESSION_MANAGEMENT = 20,
+	ACTION_EXPRESSION_MANAGEMENT = 23,
 	
-	ACTION_EXPRESSION_EVALUATION = 21
-
+	ACTION_EXPRESSION_EVALUATION = 24
 
 };
 
