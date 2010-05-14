@@ -220,9 +220,6 @@ public:
  Each time the section is entered and exited the time spent is stored and logged. The
  resulting log file can be processed by various tools to create datasets and
  graphs of program execution.
-
- All methods are static and can be accessed from all over the code.
-
 */
 class ExecutionProfiler {
 
