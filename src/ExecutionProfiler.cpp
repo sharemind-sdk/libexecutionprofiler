@@ -109,7 +109,8 @@ void ExecutionProfiler::processLog(uint32 timeLimitMs, bool flush) {
 		//WRITE_LOG_FULLDEBUG (m_console, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
 		{
             boost::mutex::scoped_lock lock (m_console->getStreamMutex());
-            m_logfile << s.sectionId << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
+			if (m_logfile.is_open ())
+				m_logfile << s.sectionId << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		}
 		m_sections.pop_front ();
 	}
