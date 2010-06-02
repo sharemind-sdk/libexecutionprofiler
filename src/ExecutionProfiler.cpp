@@ -10,7 +10,7 @@
  */
 
 #include "GetTime.h"
-#include "common/CommonLibrary.h"
+#include "../common/CommonLibrary.h"
 using namespace std;
 
 ExecutionSection::ExecutionSection(uint16 actionCode, uint32 complexityParameter, uint32 parentSectionId) {
