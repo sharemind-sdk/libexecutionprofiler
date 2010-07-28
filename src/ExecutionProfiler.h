@@ -142,23 +142,26 @@ enum ActionCodes {
 	/*! The whole lifespan of a vector greater-than comparison protocol */
 	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON = 18,
 
+	/*! The whole lifespan of a vector greater-than comparison protocol */
+	ACTION_PROTOCOL_MATRIX_SHUFFLE = 19,
+
 	/*! Randomness generation */
-	ACTION_RANDOMNESS_GENERATION = 19,
+	ACTION_RANDOMNESS_GENERATION = 20,
 
 	/*! The execution of a script */
-	ACTION_SCRIPT_EXECUTION = 20,
+	ACTION_SCRIPT_EXECUTION = 21,
 
 	/*! Various database I/O operations */
-	ACTION_DATABASE_IO = 21,
+	ACTION_DATABASE_IO = 22,
 
 	/*! Sharing and publishing of values within the VM */
-	ACTION_SHARING_AND_PUBLISHING = 22,
+	ACTION_SHARING_AND_PUBLISHING = 23,
 
-	ACTION_VECTOR_MANAGEMENT = 23,
+	ACTION_VECTOR_MANAGEMENT = 24,
 	
-	ACTION_EXPRESSION_MANAGEMENT = 24,
+	ACTION_EXPRESSION_MANAGEMENT = 25,
 	
-	ACTION_EXPRESSION_EVALUATION = 25
+	ACTION_EXPRESSION_EVALUATION = 26
 
 };
 
