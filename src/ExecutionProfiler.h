@@ -356,7 +356,7 @@ private:
 	/**
 	 The lock for the profiling log
 	*/
-	mutex m_profileLogMutex;
+	mutex* m_profileLogMutex;
 	
 	/**
 	 True, if we have profiling enabled

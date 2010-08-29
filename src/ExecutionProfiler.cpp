@@ -25,11 +25,15 @@ ExecutionProfiler::ExecutionProfiler(Console* console)
 {
 	m_nextSectionId = 0;
 	m_enableProfiling = false;
+	m_profileLogMutex = new mutex;
+	assert (m_profileLogMutex);
 }
 
 
 ExecutionProfiler::~ExecutionProfiler() {
 	finishLog();
+	if (m_profileLogMutex)
+		delete m_profileLogMutex;
 }
 
 void ExecutionProfiler::endSection(uint32 sectionId) {
@@ -37,7 +41,7 @@ void ExecutionProfiler::endSection(uint32 sectionId) {
 		return;
 
 	// Lock the list
-	boost::mutex::scoped_lock lock (m_profileLogMutex);
+	boost::mutex::scoped_lock lock (*m_profileLogMutex);
 
 	map<uint32, ExecutionSection>::iterator it = m_sectionMap.find (sectionId);
 	if (it == m_sectionMap.end ()) {
@@ -56,7 +60,7 @@ void ExecutionProfiler::finishLog() {
 		return;
 
 	// Lock the list
-	boost::mutex::scoped_lock lock (m_profileLogMutex);
+	boost::mutex::scoped_lock lock (*m_profileLogMutex);
 
 	WRITE_LOG_DEBUG (m_console, "[ExecutionProfiler] Flushing profiling log file.");
 
@@ -85,7 +89,7 @@ void ExecutionProfiler::popParentSection() {
 		return;
 
 	// Lock the list
-	boost::mutex::scoped_lock lock  (m_profileLogMutex);
+	boost::mutex::scoped_lock lock (*m_profileLogMutex);
 
 	if (m_sectionStack.size () > 0)
 		m_sectionStack.pop ();
@@ -97,7 +101,7 @@ void ExecutionProfiler::processLog(uint32 timeLimitMs, bool flush) {
 		return;
 
 	// Lock the list
-	boost::mutex::scoped_lock lock  (m_profileLogMutex);
+	boost::mutex::scoped_lock lock (*m_profileLogMutex);
 
 	uint32 start = RakNet::GetTime ();
 	uint32 end = start + timeLimitMs;
@@ -122,7 +126,7 @@ void ExecutionProfiler::pushParentSection(uint32 sectionId) {
 		return;
 
 	// Lock the list
-	boost::mutex::scoped_lock lock (m_profileLogMutex);
+	boost::mutex::scoped_lock lock (*m_profileLogMutex);
 	m_sectionStack.push (sectionId);
 }
 
@@ -131,7 +135,7 @@ bool ExecutionProfiler::startLog(const string& filename) {
 	m_filename = filename;
 	
 	// Lock the list
-	boost::mutex::scoped_lock lock (m_profileLogMutex);
+	boost::mutex::scoped_lock lock (*m_profileLogMutex);
 
 	// Check if we have a filename
 	if (m_filename.length () > 0) {
@@ -167,7 +171,7 @@ uint32 ExecutionProfiler::startSection(uint16 actionCode, uint32 complexityParam
 		return 0;
 
 	// Lock the list
-	boost::mutex::scoped_lock lock (m_profileLogMutex);
+	boost::mutex::scoped_lock lock (*m_profileLogMutex);
 
 	// Automatically set parent
 	uint32 usedParentSectionId = parentSectionId;
