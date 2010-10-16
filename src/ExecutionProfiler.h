@@ -130,38 +130,41 @@ enum ActionCodes {
 	/*! The time spent in the division protocol */
 	ACTION_PROTOCOL_VECTORIZED_DIVISION = 14,
 
+	/*! The time spent in the division protocol */
+	ACTION_PROTOCOL_VECTORIZED_DIVISION_BY_PUBLIC = 15,
+	
 	/*! The time spent in the remainder computation protocol */
-	ACTION_PROTOCOL_VECTORIZED_REMAINDER = 15,
+	ACTION_PROTOCOL_VECTORIZED_REMAINDER = 16,
 
 	/*! The time spent in the multiplication protocol */
-	ACTION_PROTOCOL_VECTORIZED_SHIFTRIGHT = 16,
+	ACTION_PROTOCOL_VECTORIZED_SHIFTRIGHT = 17,
 
 	/*! The whole lifespan of a vector equality comparison protocol */
-	ACTION_PROTOCOL_VECTORIZED_EQUALITYCOMPARISON = 17,
+	ACTION_PROTOCOL_VECTORIZED_EQUALITYCOMPARISON = 18,
 
 	/*! The whole lifespan of a vector greater-than comparison protocol */
-	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON = 18,
+	ACTION_PROTOCOL_VECTORIZED_GREATERTHANCOMPARISON = 19,
 
 	/*! The whole lifespan of a vector greater-than comparison protocol */
-	ACTION_PROTOCOL_MATRIX_SHUFFLE = 19,
+	ACTION_PROTOCOL_MATRIX_SHUFFLE = 20,
 
 	/*! Randomness generation */
-	ACTION_RANDOMNESS_GENERATION = 20,
+	ACTION_RANDOMNESS_GENERATION = 21,
 
 	/*! The execution of a script */
-	ACTION_SCRIPT_EXECUTION = 21,
+	ACTION_SCRIPT_EXECUTION = 22,
 
 	/*! Various database I/O operations */
-	ACTION_DATABASE_IO = 22,
+	ACTION_DATABASE_IO = 23,
 
 	/*! Sharing and publishing of values within the VM */
-	ACTION_SHARING_AND_PUBLISHING = 23,
+	ACTION_SHARING_AND_PUBLISHING = 24,
 
-	ACTION_VECTOR_MANAGEMENT = 24,
+	ACTION_VECTOR_MANAGEMENT = 25,
 	
-	ACTION_EXPRESSION_MANAGEMENT = 25,
+	ACTION_EXPRESSION_MANAGEMENT = 26,
 	
-	ACTION_EXPRESSION_EVALUATION = 26
+	ACTION_EXPRESSION_EVALUATION = 27
 
 };
 
