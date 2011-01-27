@@ -65,6 +65,12 @@ typedef boost::unordered_map<std::string, int> timingmap;
 		uint32 x = 0; if (profiler) x = (profiler)->startSection (type, parameter);
 	#define END_SECTION_APP(profiler, x)\
 		if (profiler) (profiler)->endSection(x);
+    #define START_CODE_TIMER(x,label)\
+            uint32 x##Timer##label = 0; x##Timer##label = RakNet::GetTime ();
+    #define UPDATE_CODE_TIMER(x,label)\
+            x += RakNet::GetTime () - x##Timer##label;
+    #define END_CODE_TIMER(profiler, x, codename)\
+            (profiler)->logInstructionTime (codename, x);
 	#define START_INSTRUCTION_TIMER(profiler, x, instruction)\
 		uint32 x = 0; if (profiler) x = RakNet::GetTime ();
 	#define END_INSTRUCTION_TIMER(profiler, x)\
@@ -85,12 +91,12 @@ typedef boost::unordered_map<std::string, int> timingmap;
 They are specified numerically, because the ProfileLogAnalyst tool
 relies on these numbers right now. */
 enum ActionCodes {
-	
+
 	// NetworkNode actions
 
 	/*! The time spent to receive strings */
 	ACTION_RECEIVE_STRING = 1,
-	
+
 	/*! The time spent to receive values */
 	ACTION_RECEIVE_VALUE = 2,
 
@@ -99,7 +105,7 @@ enum ActionCodes {
 
 	/*! The time spent to flush outgoing network messages */
 	ACTION_FLUSH_NETWORK = 4,
-	
+
 	/*! The time spent to send messages in the controller sessions' outgoing queues */
 	ACTION_PROCESS_OUTGOING_QUEUES = 5,
 
@@ -108,16 +114,16 @@ enum ActionCodes {
 
 	/*! The time spent in the data saving synchronization protocol */
 	ACTION_PROTOCOL_DATASAVING = 7,
-	
+
 	/*! The time spent in the test protocol */
 	ACTION_PROTOCOL_TESTING = 8,
-	
-	/*! The time spent in the bit extraction protocol */	
+
+	/*! The time spent in the bit extraction protocol */
 	ACTION_PROTOCOL_VECTORIZED_ADDITION = 9,
 
-	/*! The time spent in the bit extraction protocol */	
+	/*! The time spent in the bit extraction protocol */
 	ACTION_PROTOCOL_VECTORIZED_BITEXTRACTION = 10,
-	
+
 	/*! The time spent in the bitwise addition protocol */
 	ACTION_PROTOCOL_VECTORIZED_BITWISEADDITION = 11,
 
@@ -132,7 +138,7 @@ enum ActionCodes {
 
 	/*! The time spent in the division protocol */
 	ACTION_PROTOCOL_VECTORIZED_DIVISION_BY_PUBLIC = 15,
-	
+
 	/*! The time spent in the remainder computation protocol */
 	ACTION_PROTOCOL_VECTORIZED_REMAINDER = 16,
 
@@ -148,23 +154,26 @@ enum ActionCodes {
 	/*! The whole lifespan of a vector greater-than comparison protocol */
 	ACTION_PROTOCOL_MATRIX_SHUFFLE = 20,
 
+	/*! The time spent in the apriori optimized protocol */
+	ACTION_PROTOCOL_APRIORI_OPTIMIZED = 21,
+
 	/*! Randomness generation */
-	ACTION_RANDOMNESS_GENERATION = 21,
+	ACTION_RANDOMNESS_GENERATION = 22,
 
 	/*! The execution of a script */
-	ACTION_SCRIPT_EXECUTION = 22,
+	ACTION_SCRIPT_EXECUTION = 23,
 
 	/*! Various database I/O operations */
-	ACTION_DATABASE_IO = 23,
+	ACTION_DATABASE_IO = 24,
 
 	/*! Sharing and publishing of values within the VM */
-	ACTION_SHARING_AND_PUBLISHING = 24,
+	ACTION_SHARING_AND_PUBLISHING = 25,
 
-	ACTION_VECTOR_MANAGEMENT = 25,
-	
-	ACTION_EXPRESSION_MANAGEMENT = 26,
-	
-	ACTION_EXPRESSION_EVALUATION = 27
+	ACTION_VECTOR_MANAGEMENT = 26,
+
+	ACTION_EXPRESSION_MANAGEMENT = 27,
+
+	ACTION_EXPRESSION_EVALUATION = 28
 
 };
 
@@ -205,7 +214,7 @@ public:
 	 The identifier of this section
 	*/
 	uint32 sectionId;
-	
+
 	/**
 	 The identifier of the parent section containing this one (zero, if none)
 	*/
@@ -232,9 +241,9 @@ class ExecutionProfiler {
 public:
 
 	ExecutionProfiler (Console* console);
-	
+
 	~ExecutionProfiler();
-	
+
 	/**
 	 Starts the profiler by specifying a log file to write sections into.
 
@@ -310,18 +319,18 @@ public:
 	 If the stack is empty, nothing is done.
 	*/
 	void popParentSection();
-	
+
 	void logInstructionTime (const string& name, uint32 time);
-	
+
 	void dumpInstructionTimings (const string& filename);
-		
+
 private:
 
 	Console* m_console;
 
 	timingmap m_instructionTimings;
-	
-	
+
+
 	/**
 	 Handle of the file we write the profiling log to
 	*/
@@ -336,7 +345,7 @@ private:
 
 	/**
 	 The map of execution sections
-	 
+
 	 \see PushParentSection
 	 */
 	map<uint32, ExecutionSection> m_sectionMap;
@@ -360,7 +369,7 @@ private:
 	 The lock for the profiling log
 	*/
 	mutex* m_profileLogMutex;
-	
+
 	/**
 	 True, if we have profiling enabled
 	 */
