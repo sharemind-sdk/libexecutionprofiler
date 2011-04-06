@@ -20,8 +20,8 @@ ExecutionSection::ExecutionSection(uint16 actionCode, uint32 complexityParameter
 }
 
 
-ExecutionProfiler::ExecutionProfiler(Console* console) 
-  : m_console (console) 
+ExecutionProfiler::ExecutionProfiler(Logger* logger)
+  : m_logger (logger)
 {
 	m_nextSectionId = 0;
 	m_enableProfiling = false;
@@ -45,7 +45,7 @@ void ExecutionProfiler::endSection(uint32 sectionId) {
 
 	map<uint32, ExecutionSection>::iterator it = m_sectionMap.find (sectionId);
 	if (it == m_sectionMap.end ()) {
-		WRITE_LOG_ERROR (m_console, "[ExecutionProfiler] Could not end section " << sectionId << ". Not in queue.");
+		WRITE_LOG_ERROR (m_logger, "[ExecutionProfiler] Could not end section " << sectionId << ". Not in queue.");
 		return;
 	}
 
@@ -62,15 +62,15 @@ void ExecutionProfiler::finishLog() {
 	// Lock the list
 	boost::mutex::scoped_lock lock (*m_profileLogMutex);
 
-	WRITE_LOG_DEBUG (m_console, "[ExecutionProfiler] Flushing profiling log file.");
+	WRITE_LOG_DEBUG (m_logger, "[ExecutionProfiler] Flushing profiling log file.");
 
 	// Flush all sections to the disc
 	while (m_sections.size () > 0) {
 		// Give time in one-second slices
 		ExecutionSection s = m_sections.front ();
-		//WRITE_LOG_FULLDEBUG (m_console, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
+		//WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
 		{
-            boost::mutex::scoped_lock lock (m_console->getStreamMutex());
+//            boost::mutex::scoped_lock lock (m_logger->getStreamMutex());
             m_logfile << s.sectionId << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		}
 		m_sections.pop_front ();
@@ -78,7 +78,7 @@ void ExecutionProfiler::finishLog() {
 
 	// Close the log file, if necessary
 	if (m_logfile.is_open ()) {
-		WRITE_LOG_DEBUG (m_console, "[ExecutionProfiler] Closing log file " << m_filename);
+		WRITE_LOG_DEBUG (m_logger, "[ExecutionProfiler] Closing log file " << m_filename);
 		m_logfile.close ();
 	}
 }
@@ -110,9 +110,9 @@ void ExecutionProfiler::processLog(uint32 timeLimitMs, bool flush) {
 
 	while (RakNet::GetTime () < end && m_sections.size () > leaveSections) {
 		ExecutionSection s = m_sections.front ();
-		//WRITE_LOG_FULLDEBUG (m_console, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
+		//WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
 		{
-            boost::mutex::scoped_lock lock (m_console->getStreamMutex());
+//            boost::mutex::scoped_lock lock (m_logger->getStreamMutex());
 			if (m_logfile.is_open ())
 				m_logfile << s.sectionId << ", " << s.startTime << ", " << s.endTime << ", " << (s.endTime - s.startTime) << ", " << s.actionCode << ", " << s.complexityParameter << ", " << s.parentSectionId << endl;
 		}
@@ -133,7 +133,7 @@ void ExecutionProfiler::pushParentSection(uint32 sectionId) {
 
 bool ExecutionProfiler::startLog(const string& filename) {
 	m_filename = filename;
-	
+
 	// Lock the list
 	boost::mutex::scoped_lock lock (*m_profileLogMutex);
 
@@ -143,14 +143,14 @@ bool ExecutionProfiler::startLog(const string& filename) {
 		// Try to open the log file
 		m_logfile.open (m_filename.c_str ());
 		if (m_logfile.bad() || m_logfile.fail ()) {
-			WRITE_LOG_ERROR (m_console, "[ExecutionProfiler] ERROR: Can't open console log file " << m_filename << "!");
+			WRITE_LOG_ERROR (m_logger, "[ExecutionProfiler] ERROR: Can't open logger log file " << m_filename << "!");
 			return false;
 		}
 
-		WRITE_LOG_DEBUG (m_console, "[ExecutionProfiler] Opened profiling log file " << m_filename << "!");
+		WRITE_LOG_DEBUG (m_logger, "[ExecutionProfiler] Opened profiling log file " << m_filename << "!");
 
         {
-            boost::mutex::scoped_lock lock (m_console->getStreamMutex());
+//            boost::mutex::scoped_lock lock (m_logger->getStreamMutex());
             m_logfile << "SectionID" << ", " << "Start" << ", " << "End" << ", " << "Duration" << ", " << "Action" << ", " << "Complexity" << ", " << "ParentSectionID" << endl;
         }
 
@@ -160,7 +160,7 @@ bool ExecutionProfiler::startLog(const string& filename) {
 	} else {
 
 		// We didn't get a filename so spread the information about that.
-		WRITE_LOG_ERROR (m_console, "[ExecutionProfiler]  ERROR: Empty log file name!");
+		WRITE_LOG_ERROR (m_logger, "[ExecutionProfiler]  ERROR: Empty log file name!");
 		return false;
 	}
 }
@@ -189,7 +189,7 @@ uint32 ExecutionProfiler::startSection(uint16 actionCode, uint32 complexityParam
 	m_sectionMap.insert (make_pair (s.sectionId, s));
 	m_nextSectionId++;
 
-	//WRITE_LOG_FULLDEBUG (m_console, "[ExecutionProfiler] Started section " << s.sectionId << ".");
+	//WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Started section " << s.sectionId << ".");
 
 	return s.sectionId;
 }
@@ -209,5 +209,5 @@ void ExecutionProfiler::dumpInstructionTimings (const string& filename) {
 		f << i.first<< "\t" <<i.second<< endl;
 	}
 	f.close ();
-	WRITE_LOG_NORMAL(m_console, "Logged script execution profile to " << filename << ".");
+	WRITE_LOG_NORMAL(m_logger, "Logged script execution profile to " << filename << ".");
 }

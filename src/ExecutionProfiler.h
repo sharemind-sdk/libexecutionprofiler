@@ -30,7 +30,7 @@ using std::ofstream;
 using std::string;
 using boost::mutex;
 
-class Console;
+class Logger;
 
 typedef boost::unordered_map<std::string, int> timingmap;
 
@@ -240,7 +240,7 @@ class ExecutionProfiler {
 
 public:
 
-	ExecutionProfiler (Console* console);
+	ExecutionProfiler (Logger* logger);
 
 	~ExecutionProfiler();
 
@@ -326,7 +326,7 @@ public:
 
 private:
 
-	Console* m_console;
+	Logger* m_logger;
 
 	timingmap m_instructionTimings;
 
