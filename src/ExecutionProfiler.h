@@ -34,16 +34,16 @@ typedef boost::unordered_map<std::string, int> timingmap;
 // common profiling defines
 #if defined(PROFILE_APP) || defined(PROFILE_VM)
     #define START_SECTION(profiler, sid, type, parameter)\
-        uint32 sid = 0; if (profiler) sid = (profiler)->startSection (type, parameter);
+        uint32 sid = 0; sid = (profiler).startSection (type, parameter);
     #define END_SECTION(profiler, sid)\
-        if (profiler) (profiler)->endSection(sid);
+        (profiler).endSection(sid);
 
     #define PUSH_PARENT_SECTION(profiler, sid)\
-        if (profiler) (profiler)->pushParentSection(sid);
-	#define POP_PARENT_SECTION(profiler)\
-		if (profiler) (profiler)->popParentSection();
-	#define PROCESS_SECTIONS(profiler, time)\
-		if (profiler) (profiler)->processLog(time);
+        (profiler).pushParentSection(sid);
+    #define POP_PARENT_SECTION(profiler)\
+        (profiler).popParentSection();
+    #define PROCESS_SECTIONS(profiler, time)\
+        (profiler).processLog(time);
 
     #define SCOPED_SECTION(profiler, sid, type, parameter)\
         START_SECTION(profiler, sid, type, parameter)\
@@ -53,8 +53,8 @@ typedef boost::unordered_map<std::string, int> timingmap;
     #define START_SECTION(profiler, sid, type, parameter)
     #define END_SECTION(profiler, sid)
     #define PUSH_PARENT_SECTION(profiler, sid)
-	#define POP_PARENT_SECTION(profiler)
-	#define PROCESS_SECTIONS(profiler, time)
+    #define POP_PARENT_SECTION(profiler)
+    #define PROCESS_SECTIONS(profiler, time)
     #define SCOPED_SECTION(profiler, sid, type, parameter)
 #endif
 
@@ -76,12 +76,12 @@ typedef boost::unordered_map<std::string, int> timingmap;
     #define END_SECTION_APP(profiler, sid)\
         END_SECTION(profiler, sid)
 
-    #define START_INSTRUCTION_TIMER(profiler, x, instruction)\
-		uint32 x = 0; if (profiler) x = RakNet::GetTime ();
+	#define START_INSTRUCTION_TIMER(profiler, x, instruction)\
+		uint32 x = 0; x = RakNet::GetTime ();
 	#define END_INSTRUCTION_TIMER(profiler, x)\
-		if (profiler) (profiler)->logInstructionTime (instructionToExecute->OpName(), RakNet::GetTime() - x);
+		(profiler).logInstructionTime (instructionToExecute->OpName(), RakNet::GetTime() - x);
 	#define DUMP_INSTRUCTION_TIMINGS(profiler, filename)\
-		if (profiler) (profiler)->dumpInstructionTimings (filename);
+		(profiler).dumpInstructionTimings (filename);
 #else
     #define START_SECTION_APP(profiler, sid, type, parameter)
     #define END_SECTION_APP(profiler, sid)
@@ -104,16 +104,16 @@ public:
 	/**
 	 Constructs an execution section based on the given parameters
 
-     \param[in] actionCode a code describing what the section does (\see the ProfilerActionCode enum)
+	 \param[in] actionCode a code describing what the section does (\see the ProfilerActionCode enum)
 	 \param[in] complexityParameter a number describing the O(n) complexity of the section
 	 \param[in] parentSectionId the identifier of a section which contains this one
 	*/
-    ExecutionSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId);
+	ExecutionSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId);
 
 	/**
 	 Stores the action code of the section
 	*/
-    ProfilerActionCode actionCode;
+	ProfilerActionCode actionCode;
 
 	/**
 	 The identifier of this section
@@ -155,7 +155,7 @@ class ExecutionProfiler {
 
 public:
 
-	ExecutionProfiler (Logger* logger);
+	ExecutionProfiler (Logger& logger);
 
 	~ExecutionProfiler();
 
@@ -169,7 +169,7 @@ public:
 	 \retval true if opening the file was successful
 	 \retval false if opening the file failed
 	*/
-    bool startLog(const std::string &filename);
+	bool startLog(const std::string &filename);
 
 	/**
 	 Specifies the starting point of a code section for profiling.
@@ -183,7 +183,7 @@ public:
 
 	 \returns an unique identifier for the profiled code section which should be passed to EndSection later on
 	*/
-    uint32 startSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId = 0);
+	uint32 startSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId = 0);
 
 	/**
 	 Completes the specified section.
@@ -195,10 +195,10 @@ public:
 	*/
 	void endSection(uint32 sectionId);
 
-	/**
+    /**
      Finishes profiling and writes cached section to the log file.
-	*/
-	void finishLog();
+    */
+    void finishLog();
 
 	/**
 	 Processes and logs sections cached in memory.
@@ -235,13 +235,13 @@ public:
 	*/
 	void popParentSection();
 
-    void logInstructionTime (const std::string& name, uint32 time);
+	void logInstructionTime (const std::string& name, uint32 time);
 
-    void dumpInstructionTimings (const std::string& filename);
+	void dumpInstructionTimings (const std::string& filename);
 
 private:
 
-	Logger* m_logger;
+	Logger& m_logger;
 
 	timingmap m_instructionTimings;
 
@@ -254,26 +254,26 @@ private:
 	/**
 	 Handle of the file we write the profiling log to
 	*/
-    std::ofstream m_logfile;
+	std::ofstream m_logfile;
 
 	/**
 	 The stack of parent section identifiers.
 
-     \see PushParentSection
+	 \see PushParentSection
 	*/
-    std::stack<uint32> m_sectionStack;
+	std::stack<uint32> m_sectionStack;
 
 	/**
 	 The map of execution sections
 
 	 \see PushParentSection
 	 */
-    std::map<uint32, ExecutionSection> m_sectionMap;
+	std::map<uint32, ExecutionSection> m_sectionMap;
 
 	/**
 	 The cache of sections waiting for flushing to the disk
 	*/
-    std::deque<ExecutionSection> m_sections;
+	std::deque<ExecutionSection> m_sections;
 
 	/**
 	 The next available section identifier
@@ -283,7 +283,7 @@ private:
 	/**
 	 The lock for the profiling log
 	*/
-    boost::mutex m_profileLogMutex;
+	boost::mutex m_profileLogMutex;
 
 	/**
 	 True, if we have profiling enabled
@@ -305,7 +305,7 @@ public:
      \param[in] sectionId the section id
      \param[in] isParent is it parent and should it be popped.
     */
-    ExecutionSectionScope(ExecutionProfiler* profiler, uint32 sectionId, bool isParent);
+    ExecutionSectionScope(ExecutionProfiler& profiler, uint32 sectionId, bool isParent);
 
     /**
      Ends the section and possibly pops the parent section
@@ -324,9 +324,9 @@ private:
     bool m_isParent;
 
     /**
-      Holds the pointer to the ExecutionProfiler instance
+      Holds the reference to the ExecutionProfiler instance
     */
-    ExecutionProfiler* m_profiler;
+    ExecutionProfiler& m_profiler;
 };
 
 #endif // SHAREMINDCOMMON_EXECUTIONPROFILER_H

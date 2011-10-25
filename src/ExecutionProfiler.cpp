@@ -21,26 +21,29 @@ using std::make_pair;
 using std::string;
 using std::map;
 
-ExecutionSection::ExecutionSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId) {
-	this->actionCode = actionCode;
-	this->complexityParameter = complexityParameter;
-	this->parentSectionId = parentSectionId;
-}
-
-
-ExecutionProfiler::ExecutionProfiler(Logger* logger)
-  : m_logger (logger)
+ExecutionSection::ExecutionSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId)
+  : actionCode (actionCode)
+  , complexityParameter (complexityParameter)
+  , parentSectionId (parentSectionId)
 {
-	m_nextSectionId = 0;
-	m_enableProfiling = false;
 }
 
 
-ExecutionProfiler::~ExecutionProfiler() {
-	finishLog();
+ExecutionProfiler::ExecutionProfiler(Logger& logger)
+  : m_logger (logger)
+  , m_nextSectionId (0)
+  , m_enableProfiling (false)
+{
 }
 
-bool ExecutionProfiler::startLog(const string& filename) {
+
+ExecutionProfiler::~ExecutionProfiler()
+{
+    finishLog();
+}
+
+bool ExecutionProfiler::startLog(const string& filename)
+{
     m_filename = filename;
 
     // Lock the list
@@ -76,7 +79,8 @@ bool ExecutionProfiler::startLog(const string& filename) {
     }
 }
 
-void ExecutionProfiler::finishLog() {
+void ExecutionProfiler::finishLog()
+{
     if (!m_enableProfiling)
         return;
 
@@ -107,7 +111,8 @@ void ExecutionProfiler::finishLog() {
     }
 }
 
-void ExecutionProfiler::processLog(uint32 timeLimitMs, bool flush) {
+void ExecutionProfiler::processLog(uint32 timeLimitMs, bool flush)
+{
     if (!m_enableProfiling)
         return;
 
@@ -134,7 +139,8 @@ void ExecutionProfiler::processLog(uint32 timeLimitMs, bool flush) {
     }
 }
 
-uint32 ExecutionProfiler::startSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId/* = 0 */) {
+uint32 ExecutionProfiler::startSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId/* = 0 */)
+{
     if (!m_enableProfiling)
         return 0;
 
@@ -162,11 +168,12 @@ uint32 ExecutionProfiler::startSection(ProfilerActionCode actionCode, uint32 com
     return s.sectionId;
 }
 
-void ExecutionProfiler::endSection(uint32 sectionId) {
+void ExecutionProfiler::endSection(uint32 sectionId)
+{
 	if (!m_enableProfiling)
 		return;
 
-	// Lock the list
+    // Lock the list
     boost::mutex::scoped_lock lock (m_profileLogMutex);
 
 	map<uint32, ExecutionSection>::iterator it = m_sectionMap.find (sectionId);
@@ -180,7 +187,8 @@ void ExecutionProfiler::endSection(uint32 sectionId) {
 	m_sectionMap.erase (it);
 }
 
-void ExecutionProfiler::pushParentSection(uint32 sectionId) {
+void ExecutionProfiler::pushParentSection(uint32 sectionId)
+{
     if (!m_enableProfiling)
         return;
 
@@ -189,18 +197,20 @@ void ExecutionProfiler::pushParentSection(uint32 sectionId) {
     m_sectionStack.push (sectionId);
 }
 
-void ExecutionProfiler::popParentSection() {
+void ExecutionProfiler::popParentSection()
+{
 	if (!m_enableProfiling)
 		return;
 
-	// Lock the list
+    // Lock the list
     boost::mutex::scoped_lock lock (m_profileLogMutex);
 
 	if (m_sectionStack.size () > 0)
 		m_sectionStack.pop ();
 }
 
-void ExecutionProfiler::logInstructionTime (const string& name, uint32 time) {
+void ExecutionProfiler::logInstructionTime (const string& name, uint32 time)
+{
 	uint32 a = 0;
 	if (m_instructionTimings.find(name) != m_instructionTimings.end())
 		a = m_instructionTimings.at(name);
@@ -208,8 +218,9 @@ void ExecutionProfiler::logInstructionTime (const string& name, uint32 time) {
 	m_instructionTimings[name] = a;
 }
 
-void ExecutionProfiler::dumpInstructionTimings (const string& filename) {
-    ofstream f (filename.c_str());
+void ExecutionProfiler::dumpInstructionTimings (const string& filename)
+{
+	ofstream f (filename.c_str());
 	f << "Op\tTime" << endl;
 	BOOST_FOREACH(timingmap::value_type i, m_instructionTimings) {
 		f << i.first<< "\t" <<i.second<< endl;
@@ -218,13 +229,15 @@ void ExecutionProfiler::dumpInstructionTimings (const string& filename) {
 	WRITE_LOG_NORMAL(m_logger, "Logged script execution profile to " << filename << ".");
 }
 
-ExecutionSectionScope::ExecutionSectionScope(ExecutionProfiler* profiler, uint32 sectionId, bool isParent) {
-    m_profiler = profiler;
-    m_sectionId = sectionId;
-    m_isParent = isParent;
+ExecutionSectionScope::ExecutionSectionScope(ExecutionProfiler& profiler, uint32 sectionId, bool isParent)
+  : m_profiler (profiler)
+  , m_sectionId (sectionId)
+  , m_isParent (isParent)
+{
 }
 
-ExecutionSectionScope::~ExecutionSectionScope() {
+ExecutionSectionScope::~ExecutionSectionScope()
+{
     if (m_isParent) {
         POP_PARENT_SECTION(m_profiler)
     }
