@@ -1,5 +1,4 @@
 /*
-/*
  * This file is a part of the Sharemind framework.
  * Copyright (C) Cybernetica AS
  *
@@ -20,6 +19,8 @@ using std::ofstream;
 using std::make_pair;
 using std::string;
 using std::map;
+
+using namespace sharemind;
 
 ExecutionSection::ExecutionSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId)
   : actionCode (actionCode)

@@ -24,6 +24,8 @@
 #include "common/SharemindTypes.h"
 #include "common/ProfilerActionCode.h"
 
+namespace sharemind {
+
 class Logger;
 
 typedef boost::unordered_map<std::string, int> timingmap;
@@ -328,5 +330,7 @@ private:
     */
     ExecutionProfiler& m_profiler;
 };
+
+} // namespace sharemind
 
 #endif // SHAREMINDCOMMON_EXECUTIONPROFILER_H
