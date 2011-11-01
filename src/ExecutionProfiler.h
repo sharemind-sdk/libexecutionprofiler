@@ -28,7 +28,7 @@ namespace sharemind {
 
 class Logger;
 
-typedef boost::unordered_map<std::string, int> timingmap;
+typedef boost::unordered_map<std::string, uint64_t> timingmap;
 
 #define PROFILE_APP
 #define PROFILE_VM
@@ -36,7 +36,7 @@ typedef boost::unordered_map<std::string, int> timingmap;
 // common profiling defines
 #if defined(PROFILE_APP) || defined(PROFILE_VM)
     #define START_SECTION(profiler, sid, type, parameter)\
-        uint32 sid = 0; sid = (profiler).startSection (type, parameter);
+        uint32_t sid = (profiler).startSection (type, parameter);
     #define END_SECTION(profiler, sid)\
         (profiler).endSection(sid);
 
@@ -79,7 +79,7 @@ typedef boost::unordered_map<std::string, int> timingmap;
         END_SECTION(profiler, sid)
 
 	#define START_INSTRUCTION_TIMER(profiler, x, instruction)\
-		uint32 x = 0; x = RakNet::GetTime ();
+		uint64_t x = RakNet::GetTime ();
 	#define END_INSTRUCTION_TIMER(profiler, x)\
 		(profiler).logInstructionTime (instructionToExecute->OpName(), RakNet::GetTime() - x);
 	#define DUMP_INSTRUCTION_TIMINGS(profiler, filename)\
@@ -110,7 +110,7 @@ public:
 	 \param[in] complexityParameter a number describing the O(n) complexity of the section
 	 \param[in] parentSectionId the identifier of a section which contains this one
 	*/
-	ExecutionSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId);
+	ExecutionSection(ProfilerActionCode actionCode, size_t complexityParameter, uint32_t parentSectionId);
 
 	/**
 	 Stores the action code of the section
@@ -120,27 +120,27 @@ public:
 	/**
 	 The identifier of this section
 	*/
-	uint32 sectionId;
+	uint32_t sectionId;
 
 	/**
 	 The identifier of the parent section containing this one (zero, if none)
 	*/
-	uint32 parentSectionId;
+	uint32_t parentSectionId;
 
 	/**
 	 A timestamp for the moment the section started
 	*/
-	uint32 startTime;
+	uint64_t startTime;
 
     /**
      A timestamp for the moment the section was completed
     */
-    uint32 endTime;
+    uint64_t endTime;
 
     /**
      The O(n) complexity parameter for the section
     */
-    uint32 complexityParameter;
+    size_t complexityParameter;
 
 };
 
@@ -185,7 +185,7 @@ public:
 
 	 \returns an unique identifier for the profiled code section which should be passed to EndSection later on
 	*/
-	uint32 startSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId = 0);
+	uint32_t startSection(ProfilerActionCode actionCode, size_t complexityParameter, uint32_t parentSectionId = 0);
 
 	/**
 	 Completes the specified section.
@@ -195,7 +195,7 @@ public:
 
 	 \param[in] sectionId the id returned by StartSection. If no such section has been started, the method does nothing.
 	*/
-	void endSection(uint32 sectionId);
+	void endSection(uint32_t sectionId);
 
     /**
      Finishes profiling and writes cached section to the log file.
@@ -212,7 +212,7 @@ public:
 	 If this is zero, no sections are flushed. The default value for this parameter is 10.
 	 \param[in] flush if true, flushes the sections, false by default
 	*/
-	void processLog(uint32 timeLimitMs = 10, bool flush = false);
+	void processLog(uint32_t timeLimitMs = 10, bool flush = false);
 
 	/**
 	 Specifies a default parent section for subsequent sections.
@@ -227,7 +227,7 @@ public:
 
 	 \param[in] sectionId the id of the section to be used as a parent for subsequent sections
 	*/
-	void pushParentSection(uint32 sectionId);
+	void pushParentSection(uint32_t sectionId);
 
 
 	/**
@@ -237,7 +237,7 @@ public:
 	*/
 	void popParentSection();
 
-	void logInstructionTime (const std::string& name, uint32 time);
+	void logInstructionTime (const std::string& name, uint64_t time);
 
 	void dumpInstructionTimings (const std::string& filename);
 
@@ -263,14 +263,14 @@ private:
 
 	 \see PushParentSection
 	*/
-	std::stack<uint32> m_sectionStack;
+	std::stack<uint32_t> m_sectionStack;
 
 	/**
 	 The map of execution sections
 
 	 \see PushParentSection
 	 */
-	std::map<uint32, ExecutionSection> m_sectionMap;
+	std::map<uint32_t, ExecutionSection> m_sectionMap;
 
 	/**
 	 The cache of sections waiting for flushing to the disk
@@ -280,7 +280,7 @@ private:
 	/**
 	 The next available section identifier
 	*/
-	uint32 m_nextSectionId;
+	uint32_t m_nextSectionId;
 
 	/**
 	 The lock for the profiling log
@@ -307,7 +307,7 @@ public:
      \param[in] sectionId the section id
      \param[in] isParent is it parent and should it be popped.
     */
-    ExecutionSectionScope(ExecutionProfiler& profiler, uint32 sectionId, bool isParent);
+    ExecutionSectionScope(ExecutionProfiler& profiler, uint32_t sectionId, bool isParent);
 
     /**
      Ends the section and possibly pops the parent section
@@ -318,7 +318,7 @@ private:
     /**
      The identifier of the section to end.
     */
-    uint32 m_sectionId;
+    uint32_t m_sectionId;
 
     /**
      Indicates whether the section is parent section and should be popped.

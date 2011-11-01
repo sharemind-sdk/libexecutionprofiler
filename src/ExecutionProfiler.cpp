@@ -8,7 +8,6 @@
  */
 
 #include <iostream>
-
 #include <GetTime.h>
 
 #include "common/ExecutionProfiler.h"
@@ -22,7 +21,7 @@ using std::map;
 
 using namespace sharemind;
 
-ExecutionSection::ExecutionSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId)
+ExecutionSection::ExecutionSection(ProfilerActionCode actionCode, size_t complexityParameter, uint32_t parentSectionId)
   : actionCode (actionCode)
   , complexityParameter (complexityParameter)
   , parentSectionId (parentSectionId)
@@ -112,7 +111,7 @@ void ExecutionProfiler::finishLog()
     }
 }
 
-void ExecutionProfiler::processLog(uint32 timeLimitMs, bool flush)
+void ExecutionProfiler::processLog(uint32_t timeLimitMs, bool flush)
 {
     if (!m_enableProfiling)
         return;
@@ -120,10 +119,10 @@ void ExecutionProfiler::processLog(uint32 timeLimitMs, bool flush)
     // Lock the list
     boost::mutex::scoped_lock lock (m_profileLogMutex);
 
-    uint32 start = RakNet::GetTime ();
-    uint32 end = start + timeLimitMs;
+    uint64_t start = RakNet::GetTime ();
+    uint64_t end = start + timeLimitMs;
 
-    uint32 leaveSections = 0;
+    size_t leaveSections = 0;
 
     while (RakNet::GetTime () < end && m_sections.size () > leaveSections) {
         ExecutionSection s = m_sections.front ();
@@ -140,7 +139,7 @@ void ExecutionProfiler::processLog(uint32 timeLimitMs, bool flush)
     }
 }
 
-uint32 ExecutionProfiler::startSection(ProfilerActionCode actionCode, uint32 complexityParameter, uint32 parentSectionId/* = 0 */)
+uint32_t ExecutionProfiler::startSection(ProfilerActionCode actionCode, size_t complexityParameter, uint32_t parentSectionId/* = 0 */)
 {
     if (!m_enableProfiling)
         return 0;
@@ -149,7 +148,7 @@ uint32 ExecutionProfiler::startSection(ProfilerActionCode actionCode, uint32 com
     boost::mutex::scoped_lock lock (m_profileLogMutex);
 
     // Automatically set parent
-    uint32 usedParentSectionId = parentSectionId;
+    uint32_t usedParentSectionId = parentSectionId;
     if (parentSectionId == 0) {
         if (m_sectionStack.size () > 0) {
             usedParentSectionId = m_sectionStack.top ();
@@ -169,7 +168,7 @@ uint32 ExecutionProfiler::startSection(ProfilerActionCode actionCode, uint32 com
     return s.sectionId;
 }
 
-void ExecutionProfiler::endSection(uint32 sectionId)
+void ExecutionProfiler::endSection(uint32_t sectionId)
 {
 	if (!m_enableProfiling)
 		return;
@@ -177,7 +176,7 @@ void ExecutionProfiler::endSection(uint32 sectionId)
     // Lock the list
     boost::mutex::scoped_lock lock (m_profileLogMutex);
 
-	map<uint32, ExecutionSection>::iterator it = m_sectionMap.find (sectionId);
+	map<uint32_t, ExecutionSection>::iterator it = m_sectionMap.find (sectionId);
 	if (it == m_sectionMap.end ()) {
 		WRITE_LOG_ERROR (m_logger, "[ExecutionProfiler] Could not end section " << sectionId << ". Not in queue.");
 		return;
@@ -188,7 +187,7 @@ void ExecutionProfiler::endSection(uint32 sectionId)
 	m_sectionMap.erase (it);
 }
 
-void ExecutionProfiler::pushParentSection(uint32 sectionId)
+void ExecutionProfiler::pushParentSection(uint32_t sectionId)
 {
     if (!m_enableProfiling)
         return;
@@ -210,9 +209,9 @@ void ExecutionProfiler::popParentSection()
 		m_sectionStack.pop ();
 }
 
-void ExecutionProfiler::logInstructionTime (const string& name, uint32 time)
+void ExecutionProfiler::logInstructionTime (const string& name, uint64_t time)
 {
-	uint32 a = 0;
+	uint64_t a = 0;
 	if (m_instructionTimings.find(name) != m_instructionTimings.end())
 		a = m_instructionTimings.at(name);
 	a += time;
@@ -230,7 +229,7 @@ void ExecutionProfiler::dumpInstructionTimings (const string& filename)
 	WRITE_LOG_NORMAL(m_logger, "Logged script execution profile to " << filename << ".");
 }
 
-ExecutionSectionScope::ExecutionSectionScope(ExecutionProfiler& profiler, uint32 sectionId, bool isParent)
+ExecutionSectionScope::ExecutionSectionScope(ExecutionProfiler& profiler, uint32_t sectionId, bool isParent)
   : m_profiler (profiler)
   , m_sectionId (sectionId)
   , m_isParent (isParent)
