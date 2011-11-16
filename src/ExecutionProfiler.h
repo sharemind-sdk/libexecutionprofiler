@@ -288,9 +288,9 @@ private:
 	boost::mutex m_profileLogMutex;
 
 	/**
-	 True, if we have profiling enabled
+	 True, if profiling is active
 	 */
-	bool m_enableProfiling;
+	bool m_profilingActive;
 
 };
 

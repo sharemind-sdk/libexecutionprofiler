@@ -32,7 +32,7 @@ ExecutionSection::ExecutionSection(ProfilerActionCode actionCode, size_t complex
 ExecutionProfiler::ExecutionProfiler(Logger& logger)
   : m_logger (logger)
   , m_nextSectionId (0)
-  , m_enableProfiling (false)
+  , m_profilingActive (false)
 {
 }
 
@@ -68,7 +68,7 @@ bool ExecutionProfiler::startLog(const string& filename)
                       << "Complexity" << ", " << "ParentSectionID" << endl;
         }
 
-        m_enableProfiling = true;
+        m_profilingActive = true;
         return true;
 
     } else {
@@ -81,7 +81,7 @@ bool ExecutionProfiler::startLog(const string& filename)
 
 void ExecutionProfiler::finishLog()
 {
-    if (!m_enableProfiling)
+    if (!m_profilingActive)
         return;
 
     // Lock the list
@@ -109,11 +109,13 @@ void ExecutionProfiler::finishLog()
         WRITE_LOG_DEBUG (m_logger, "[ExecutionProfiler] Closing log file " << m_filename);
         m_logfile.close ();
     }
+
+    m_profilingActive = false;
 }
 
 void ExecutionProfiler::processLog(uint32_t timeLimitMs, bool flush)
 {
-    if (!m_enableProfiling)
+    if (!m_profilingActive)
         return;
 
     // Lock the list
@@ -141,7 +143,7 @@ void ExecutionProfiler::processLog(uint32_t timeLimitMs, bool flush)
 
 uint32_t ExecutionProfiler::startSection(ProfilerActionCode actionCode, size_t complexityParameter, uint32_t parentSectionId/* = 0 */)
 {
-    if (!m_enableProfiling)
+    if (!m_profilingActive)
         return 0;
 
     // Lock the list
@@ -170,7 +172,7 @@ uint32_t ExecutionProfiler::startSection(ProfilerActionCode actionCode, size_t c
 
 void ExecutionProfiler::endSection(uint32_t sectionId)
 {
-	if (!m_enableProfiling)
+	if (!m_profilingActive)
 		return;
 
     // Lock the list
@@ -189,7 +191,7 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
 
 void ExecutionProfiler::pushParentSection(uint32_t sectionId)
 {
-    if (!m_enableProfiling)
+    if (!m_profilingActive)
         return;
 
     // Lock the list
@@ -199,7 +201,7 @@ void ExecutionProfiler::pushParentSection(uint32_t sectionId)
 
 void ExecutionProfiler::popParentSection()
 {
-	if (!m_enableProfiling)
+	if (!m_profilingActive)
 		return;
 
     // Lock the list
