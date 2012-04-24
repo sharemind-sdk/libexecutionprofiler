@@ -20,9 +20,9 @@
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 #include <fstream>
+#include "SharemindTypes.h"
+#include "ProfilerActionCode.h"
 
-#include "common/SharemindTypes.h"
-#include "common/ProfilerActionCode.h"
 
 namespace sharemind {
 

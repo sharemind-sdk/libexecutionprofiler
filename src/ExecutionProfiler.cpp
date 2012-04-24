@@ -7,11 +7,11 @@
  * code is subject to the appropriate license agreement.
  */
 
+#include <GetTime.h> /// \todo Fix RakNet include path!
 #include <iostream>
-#include <GetTime.h>
+#include "ExecutionProfiler.h"
+#include "Logger/Logger.h"
 
-#include "common/ExecutionProfiler.h"
-#include "common/Logger/Logger.h"
 
 using std::endl;
 using std::ofstream;
