@@ -33,7 +33,7 @@ typedef boost::unordered_map<std::string, uint64_t> timingmap;
 #define PROFILE_APP
 #define PROFILE_VM
 
-// common profiling defines
+/* common profiling defines */
 #if defined(PROFILE_APP) || defined(PROFILE_VM)
     #define START_SECTION(profiler, sid, type, parameter)\
         uint32_t sid = (profiler).startSection (type, parameter);
@@ -60,7 +60,7 @@ typedef boost::unordered_map<std::string, uint64_t> timingmap;
     #define SCOPED_SECTION(profiler, sid, type, parameter)
 #endif
 
-// vm specific profiling defines
+/* vm specific profiling defines */
 #ifdef PROFILE_VM
     #define START_SECTION_VM(profiler, sid, type, parameter)\
         START_SECTION(profiler, sid, type, parameter)
@@ -71,7 +71,7 @@ typedef boost::unordered_map<std::string, uint64_t> timingmap;
     #define END_SECTION_VM(profiler, sid)
 #endif
 
-// application specific profiling defines
+/* application specific profiling defines */
 #ifdef PROFILE_APP
     #define START_SECTION_APP(profiler, sid, type, parameter)\
         START_SECTION(profiler, sid, type, parameter)
@@ -331,6 +331,6 @@ private:
     ExecutionProfiler& m_profiler;
 };
 
-} // namespace sharemind
+} /* namespace sharemind { */
 
-#endif // SHAREMINDCOMMON_EXECUTIONPROFILER_H
+#endif /* SHAREMINDCOMMON_EXECUTIONPROFILER_H */
