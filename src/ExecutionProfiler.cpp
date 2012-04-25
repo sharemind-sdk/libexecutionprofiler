@@ -172,21 +172,21 @@ uint32_t ExecutionProfiler::startSection(ProfilerActionCode actionCode, size_t c
 
 void ExecutionProfiler::endSection(uint32_t sectionId)
 {
-	if (!m_profilingActive)
-		return;
+    if (!m_profilingActive)
+        return;
 
     // Lock the list
     boost::mutex::scoped_lock lock (m_profileLogMutex);
 
-	map<uint32_t, ExecutionSection>::iterator it = m_sectionMap.find (sectionId);
-	if (it == m_sectionMap.end ()) {
-		WRITE_LOG_ERROR (m_logger, "[ExecutionProfiler] Could not end section " << sectionId << ". Not in queue.");
-		return;
-	}
+    map<uint32_t, ExecutionSection>::iterator it = m_sectionMap.find (sectionId);
+    if (it == m_sectionMap.end ()) {
+        WRITE_LOG_ERROR (m_logger, "[ExecutionProfiler] Could not end section " << sectionId << ". Not in queue.");
+        return;
+    }
 
-	it->second.endTime = RakNet::GetTime ();
-	m_sections.push_back (it->second);
-	m_sectionMap.erase (it);
+    it->second.endTime = RakNet::GetTime ();
+    m_sections.push_back (it->second);
+    m_sectionMap.erase (it);
 }
 
 void ExecutionProfiler::pushParentSection(uint32_t sectionId)
@@ -201,34 +201,34 @@ void ExecutionProfiler::pushParentSection(uint32_t sectionId)
 
 void ExecutionProfiler::popParentSection()
 {
-	if (!m_profilingActive)
-		return;
+    if (!m_profilingActive)
+        return;
 
     // Lock the list
     boost::mutex::scoped_lock lock (m_profileLogMutex);
 
-	if (m_sectionStack.size () > 0)
-		m_sectionStack.pop ();
+    if (m_sectionStack.size () > 0)
+        m_sectionStack.pop ();
 }
 
 void ExecutionProfiler::logInstructionTime (const string& name, uint64_t time)
 {
-	uint64_t a = 0;
-	if (m_instructionTimings.find(name) != m_instructionTimings.end())
-		a = m_instructionTimings.at(name);
-	a += time;
-	m_instructionTimings[name] = a;
+    uint64_t a = 0;
+    if (m_instructionTimings.find(name) != m_instructionTimings.end())
+        a = m_instructionTimings.at(name);
+    a += time;
+    m_instructionTimings[name] = a;
 }
 
 void ExecutionProfiler::dumpInstructionTimings (const string& filename)
 {
-	ofstream f (filename.c_str());
-	f << "Op\tTime" << endl;
-	BOOST_FOREACH(timingmap::value_type i, m_instructionTimings) {
-		f << i.first<< "\t" <<i.second<< endl;
-	}
-	f.close ();
-	WRITE_LOG_NORMAL(m_logger, "Logged script execution profile to " << filename << ".");
+    ofstream f (filename.c_str());
+    f << "Op\tTime" << endl;
+    BOOST_FOREACH(timingmap::value_type i, m_instructionTimings) {
+        f << i.first<< "\t" <<i.second<< endl;
+    }
+    f.close ();
+    WRITE_LOG_NORMAL(m_logger, "Logged script execution profile to " << filename << ".");
 }
 
 ExecutionSectionScope::ExecutionSectionScope(ExecutionProfiler& profiler, uint32_t sectionId, bool isParent)
