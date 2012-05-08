@@ -29,7 +29,7 @@ ExecutionSection::ExecutionSection(ProfilerActionCode actionCode, size_t complex
 }
 
 
-ExecutionProfiler::ExecutionProfiler(Logger& logger)
+ExecutionProfiler::ExecutionProfiler(ILogger & logger)
   : m_logger (logger)
   , m_nextSectionId (0)
   , m_profilingActive (false)

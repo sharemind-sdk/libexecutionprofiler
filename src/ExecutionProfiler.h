@@ -26,7 +26,7 @@
 
 namespace sharemind {
 
-class Logger;
+class ILogger;
 
 typedef boost::unordered_map<std::string, uint64_t> timingmap;
 
@@ -157,7 +157,7 @@ class ExecutionProfiler {
 
 public:
 
-    ExecutionProfiler (Logger& logger);
+    ExecutionProfiler(ILogger & logger);
 
     ~ExecutionProfiler();
 
@@ -243,7 +243,7 @@ public:
 
 private:
 
-    Logger& m_logger;
+    ILogger & m_logger;
 
     timingmap m_instructionTimings;
 
