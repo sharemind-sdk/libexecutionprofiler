@@ -10,8 +10,10 @@
 #include <GetTime.h> /// \todo Fix RakNet include path!
 #include <iostream>
 #include "ExecutionProfiler.h"
-#include "Logger/Logger.h"
+#include "Logger/Debug.h"
 
+
+namespace { SHAREMIND_DEFINE_PREFIXED_LOGS("[ExecutionProfiler] "); }
 
 using std::endl;
 using std::ofstream;
@@ -19,7 +21,7 @@ using std::make_pair;
 using std::string;
 using std::map;
 
-using namespace sharemind;
+namespace sharemind {
 
 ExecutionSection::ExecutionSection(ProfilerActionCode actionCode, size_t complexityParameter, uint32_t parentSectionId)
   : actionCode (actionCode)
@@ -55,11 +57,11 @@ bool ExecutionProfiler::startLog(const string& filename)
         // Try to open the log file
         m_logfile.open (m_filename.c_str ());
         if (m_logfile.bad() || m_logfile.fail ()) {
-            WRITE_LOG_ERROR (m_logger, "[ExecutionProfiler] ERROR: Can't open logger log file " << m_filename << "!");
+            LogError(m_logger) << "Can't open logger log file " << m_filename << "!";
             return false;
         }
 
-        WRITE_LOG_DEBUG (m_logger, "[ExecutionProfiler] Opened profiling log file " << m_filename << "!");
+        LogDebug(m_logger) << "Opened profiling log file " << m_filename << "!";
 
         {
 //            boost::mutex::scoped_lock lock (m_logger->getStreamMutex());
@@ -74,7 +76,7 @@ bool ExecutionProfiler::startLog(const string& filename)
     } else {
 
         // We didn't get a filename so spread the information about that.
-        WRITE_LOG_ERROR (m_logger, "[ExecutionProfiler]  ERROR: Empty log file name!");
+        LogError(m_logger) << "Empty log file name!";
         return false;
     }
 }
@@ -87,7 +89,7 @@ void ExecutionProfiler::finishLog()
     // Lock the list
     boost::mutex::scoped_lock lock (m_profileLogMutex);
 
-    WRITE_LOG_DEBUG (m_logger, "[ExecutionProfiler] Flushing profiling log file.");
+    LogDebug(m_logger) << "Flushing profiling log file.";
 
     // Flush all sections to the disc
     while (m_sections.size () > 0) {
@@ -106,7 +108,7 @@ void ExecutionProfiler::finishLog()
 
     // Close the log file, if necessary
     if (m_logfile.is_open ()) {
-        WRITE_LOG_DEBUG (m_logger, "[ExecutionProfiler] Closing log file " << m_filename);
+        LogDebug(m_logger) << "Closing log file " << m_filename;
         m_logfile.close ();
     }
 
@@ -180,7 +182,7 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
 
     map<uint32_t, ExecutionSection>::iterator it = m_sectionMap.find (sectionId);
     if (it == m_sectionMap.end ()) {
-        WRITE_LOG_ERROR (m_logger, "[ExecutionProfiler] Could not end section " << sectionId << ". Not in queue.");
+        LogError(m_logger) << "Could not end section " << sectionId << ". Not in queue.";
         return;
     }
 
@@ -228,7 +230,7 @@ void ExecutionProfiler::dumpInstructionTimings (const string& filename)
         f << i.first<< "\t" <<i.second<< endl;
     }
     f.close ();
-    WRITE_LOG_NORMAL(m_logger, "Logged script execution profile to " << filename << ".");
+    LogNormal(m_logger) << "Logged script execution profile to " << filename << ".";
 }
 
 ExecutionSectionScope::ExecutionSectionScope(ExecutionProfiler& profiler, uint32_t sectionId, bool isParent)
@@ -245,3 +247,5 @@ ExecutionSectionScope::~ExecutionSectionScope()
     }
     END_SECTION(m_profiler, m_sectionId)
 }
+
+} // namespace sharemind {
