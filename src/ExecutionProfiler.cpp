@@ -7,34 +7,59 @@
  * code is subject to the appropriate license agreement.
  */
 
-#include <GetTime.h> /// \todo Fix RakNet include path!
-#include <iostream>
 #include "ExecutionProfiler.h"
+
+#include <iostream>
 #include "Logger/Debug.h"
 
 
 namespace { SHAREMIND_DEFINE_PREFIXED_LOGS("[ExecutionProfiler] "); }
 
 using std::endl;
-using std::ofstream;
 using std::make_pair;
+using std::ofstream;
 using std::string;
 using std::map;
 
 namespace sharemind {
 
-ExecutionSection::ExecutionSection(ProfilerActionCode actionCode, size_t complexityParameter, uint32_t parentSectionId)
-  : actionCode (actionCode)
-  , complexityParameter (complexityParameter)
-  , parentSectionId (parentSectionId)
+ExecutionSection::ExecutionSection(const char * sectionName,
+                                   uint32_t sectionId,
+                                   uint32_t parentSectionId,
+                                   MicrosecondTimerTime startTime,
+                                   MicrosecondTimerTime endTime,
+                                   size_t complexityParameter)
+    : m_sectionName (sectionName)
+    , m_nameCached (false)
+    , sectionId (sectionId)
+    , parentSectionId (parentSectionId)
+    , startTime (startTime)
+    , endTime (endTime)
+    , complexityParameter (complexityParameter)
 {
 }
 
+ExecutionSection::ExecutionSection(uint32_t sectionType,
+                                   uint32_t sectionId,
+                                   uint32_t parentSectionId,
+                                   MicrosecondTimerTime startTime,
+                                   MicrosecondTimerTime endTime,
+                                   size_t complexityParameter)
+    : m_sectionName (sectionType)
+    , m_nameCached (true)
+    , sectionId (sectionId)
+    , parentSectionId (parentSectionId)
+    , startTime (startTime)
+    , endTime (endTime)
+    , complexityParameter (complexityParameter)
+{
+}
 
 ExecutionProfiler::ExecutionProfiler(ILogger & logger)
-  : m_logger (logger)
-  , m_nextSectionId (0)
-  , m_profilingActive (false)
+  : m_logger(logger)
+  , m_nextSectionTypeId(0)
+  , m_nextSectionId(0)
+  , m_profilingActive(false)
 {
 }
 
@@ -49,26 +74,23 @@ bool ExecutionProfiler::startLog(const string& filename)
     m_filename = filename;
 
     // Lock the list
-    boost::mutex::scoped_lock lock (m_profileLogMutex);
+    boost::mutex::scoped_lock lock(m_profileLogMutex);
 
     // Check if we have a filename
-    if (m_filename.length () > 0) {
+    if (m_filename.length() > 0) {
 
         // Try to open the log file
-        m_logfile.open (m_filename.c_str ());
-        if (m_logfile.bad() || m_logfile.fail ()) {
-            LogError(m_logger) << "Can't open logger log file " << m_filename << "!";
+        m_logfile.open(m_filename.c_str());
+        if (m_logfile.bad() || m_logfile.fail()) {
+            LogError(m_logger) << "Can not open profiler log file '" << m_filename << "'!";
             return false;
         }
 
-        LogDebug(m_logger) << "Opened profiling log file " << m_filename << "!";
+        LogDebug(m_logger) << "Opened profiling log file '" << m_filename << "'!";
 
-        {
-//            boost::mutex::scoped_lock lock (m_logger->getStreamMutex());
-            m_logfile << "SectionID" << ", " << "Start" << ", " << "End"
-                      << ", " << "Duration" << ", " << "Action" << ", "
-                      << "Complexity" << ", " << "ParentSectionID" << endl;
-        }
+        m_logfile << "SectionID" ", " << "ParentSectionID" << ", "
+                  << "Start" << ", " << "End" << ", "
+                  << "Action" << ", " << "Complexity" << endl;
 
         m_profilingActive = true;
         return true;
@@ -87,29 +109,19 @@ void ExecutionProfiler::finishLog()
         return;
 
     // Lock the list
-    boost::mutex::scoped_lock lock (m_profileLogMutex);
+    boost::mutex::scoped_lock lock(m_profileLogMutex);
 
     LogDebug(m_logger) << "Flushing profiling log file.";
 
     // Flush all sections to the disc
-    while (m_sections.size () > 0) {
-        // Give time in one-second slices
-        ExecutionSection s = m_sections.front ();
-        //WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
-        {
-//            boost::mutex::scoped_lock lock (m_logger->getStreamMutex());
-            m_logfile << s.sectionId << ", " << s.startTime << ", " << s.endTime
-                      << ", " << (s.endTime - s.startTime) << ", "
-                      << s.actionCode << ", " << s.complexityParameter
-                      << ", " << s.parentSectionId << endl;
-        }
-        m_sections.pop_front ();
+    while (m_sections.size() > 0) {
+        __processLog(1000, true);
     }
 
     // Close the log file, if necessary
-    if (m_logfile.is_open ()) {
-        LogDebug(m_logger) << "Closing log file " << m_filename;
-        m_logfile.close ();
+    if (m_logfile.is_open()) {
+        LogDebug(m_logger) << "Closing prifiler log file '" << m_filename << "'";
+        m_logfile.close();
     }
 
     m_profilingActive = false;
@@ -121,55 +133,48 @@ void ExecutionProfiler::processLog(uint32_t timeLimitMs, bool flush)
         return;
 
     // Lock the list
-    boost::mutex::scoped_lock lock (m_profileLogMutex);
-
-    uint64_t start = RakNet::GetTime ();
-    uint64_t end = start + timeLimitMs;
-
-    size_t leaveSections = 0;
-
-    while (RakNet::GetTime () < end && m_sections.size () > leaveSections) {
-        ExecutionSection s = m_sections.front ();
-        //WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Logging section " << s.sectionId << ".");
-        {
-//            boost::mutex::scoped_lock lock (m_logger->getStreamMutex());
-            if (m_logfile.is_open ())
-                m_logfile << s.sectionId << ", " << s.startTime << ", "
-                          << s.endTime << ", " << (s.endTime - s.startTime)
-                          << ", " << s.actionCode << ", " << s.complexityParameter
-                          << ", " << s.parentSectionId << endl;
-        }
-        m_sections.pop_front ();
-    }
+    boost::mutex::scoped_lock lock(m_profileLogMutex);
+    __processLog(timeLimitMs, flush);
 }
 
-uint32_t ExecutionProfiler::startSection(ProfilerActionCode actionCode, size_t complexityParameter, uint32_t parentSectionId/* = 0 */)
-{
+void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
+    MicrosecondTimerTime end = MicrosecondTimer_get_global_time() + timeLimitMs * 1000;
+
+    while (MicrosecondTimer_get_global_time() < end && m_sections.size() > 0) {
+        ExecutionSection * s = m_sections.front();
+        //LogFullDebug(m_logger) << "[ExecutionProfiler] Logging section " << s.sectionId << ".";
+
+        m_logfile << s->sectionId << "," << s->parentSectionId << ","
+                  << s->startTime << "," << s->endTime << ","
+                  << getSectionName(s) << "," << s->complexityParameter
+                  << endl;
+
+        delete s;
+        m_sections.pop_front();
+    }
+
+    if (flush)
+        m_logfile.flush();
+}
+
+uint32_t ExecutionProfiler::newSectionType(const char * name) {
     if (!m_profilingActive)
         return 0;
 
-    // Lock the list
-    boost::mutex::scoped_lock lock (m_profileLogMutex);
-
-    // Automatically set parent
-    uint32_t usedParentSectionId = parentSectionId;
-    if (parentSectionId == 0) {
-        if (m_sectionStack.size () > 0) {
-            usedParentSectionId = m_sectionStack.top ();
-        }
+    /// \todo Is it a good idea to reuse duplicate section types?
+    for(map<uint32_t, char *>::iterator it = m_sectionTypes.begin();
+        it != m_sectionTypes.end(); ++it)
+    {
+        if (strcmp(it->second, name) == 0)
+            return it->first;
     }
 
-    // Create the entry and store it
-    ExecutionSection s (actionCode, complexityParameter, usedParentSectionId);
-    s.startTime = RakNet::GetTime ();
-    s.endTime = 0;
-    s.sectionId = m_nextSectionId;
-    m_sectionMap.insert (make_pair (s.sectionId, s));
-    m_nextSectionId++;
+    size_t n = strlen(name);
+    char * cname = new char[n + 1];
+    strncpy(cname, name, n);
 
-    //WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Started section " << s.sectionId << ".");
-
-    return s.sectionId;
+    m_sectionTypes.insert(make_pair(m_nextSectionTypeId, cname));
+    return m_nextSectionTypeId++;
 }
 
 void ExecutionProfiler::endSection(uint32_t sectionId)
@@ -178,17 +183,17 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
         return;
 
     // Lock the list
-    boost::mutex::scoped_lock lock (m_profileLogMutex);
+    boost::mutex::scoped_lock lock(m_profileLogMutex);
 
-    map<uint32_t, ExecutionSection>::iterator it = m_sectionMap.find (sectionId);
-    if (it == m_sectionMap.end ()) {
+    map<uint32_t, ExecutionSection*>::iterator it = m_sectionMap.find(sectionId);
+    if (it == m_sectionMap.end()) {
         LogError(m_logger) << "Could not end section " << sectionId << ". Not in queue.";
         return;
     }
 
-    it->second.endTime = RakNet::GetTime ();
-    m_sections.push_back (it->second);
-    m_sectionMap.erase (it);
+    it->second->endTime = MicrosecondTimer_get_global_time() / 1000;
+    m_sections.push_back(it->second);
+    m_sectionMap.erase(it);
 }
 
 void ExecutionProfiler::pushParentSection(uint32_t sectionId)
@@ -198,7 +203,7 @@ void ExecutionProfiler::pushParentSection(uint32_t sectionId)
 
     // Lock the list
     boost::mutex::scoped_lock lock (m_profileLogMutex);
-    m_sectionStack.push (sectionId);
+    m_parentSectionStack.push(sectionId);
 }
 
 void ExecutionProfiler::popParentSection()
@@ -209,43 +214,8 @@ void ExecutionProfiler::popParentSection()
     // Lock the list
     boost::mutex::scoped_lock lock (m_profileLogMutex);
 
-    if (m_sectionStack.size () > 0)
-        m_sectionStack.pop ();
-}
-
-void ExecutionProfiler::logInstructionTime (const string& name, uint64_t time)
-{
-    uint64_t a = 0;
-    if (m_instructionTimings.find(name) != m_instructionTimings.end())
-        a = m_instructionTimings.at(name);
-    a += time;
-    m_instructionTimings[name] = a;
-}
-
-void ExecutionProfiler::dumpInstructionTimings (const string& filename)
-{
-    ofstream f (filename.c_str());
-    f << "Op\tTime" << endl;
-    BOOST_FOREACH(timingmap::value_type i, m_instructionTimings) {
-        f << i.first<< "\t" <<i.second<< endl;
-    }
-    f.close ();
-    LogNormal(m_logger) << "Logged script execution profile to " << filename << ".";
-}
-
-ExecutionSectionScope::ExecutionSectionScope(ExecutionProfiler& profiler, uint32_t sectionId, bool isParent)
-  : m_profiler (profiler)
-  , m_sectionId (sectionId)
-  , m_isParent (isParent)
-{
-}
-
-ExecutionSectionScope::~ExecutionSectionScope()
-{
-    if (m_isParent) {
-        POP_PARENT_SECTION(m_profiler)
-    }
-    END_SECTION(m_profiler, m_sectionId)
+    if (!m_parentSectionStack.empty())
+        m_parentSectionStack.pop();
 }
 
 } // namespace sharemind {

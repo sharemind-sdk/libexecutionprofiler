@@ -10,138 +10,151 @@
 #ifndef SHAREMINDCOMMON_EXECUTIONPROFILER_H
 #define SHAREMINDCOMMON_EXECUTIONPROFILER_H
 
-#include <stack>
 #include <deque>
-#include <map>
-#include <iostream>
-#include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
-#include <boost/foreach.hpp>
-#include <boost/unordered_map.hpp>
 #include <fstream>
-#include "SharemindTypes.h"
-#include "ProfilerActionCode.h"
-
+#include <iostream>
+#include <map>
+#include <stack>
+#include <boost/thread/mutex.hpp>
+#include "MicrosecondTimer.h"
 
 namespace sharemind {
 
 class ILogger;
+class ExecutionProfiler;
 
-typedef boost::unordered_map<std::string, uint64_t> timingmap;
-
-#define PROFILE_APP
+#define PROFILE_MINER
+#define PROFILE_SECREC
 #define PROFILE_VM
 
 /* common profiling defines */
-#if defined(PROFILE_APP) || defined(PROFILE_VM)
-    #define START_SECTION(profiler, sid, type, parameter)\
-        uint32_t sid = (profiler).startSection (type, parameter);
+#if defined(PROFILE_MINER) || defined(PROFILE_SECREC) || defined(PROFILE_VM)
+    #define START_SECTION(profiler, sid, name, T, parameter)\
+        uint32_t sid = (profiler).startSection<T> (name, parameter);
     #define END_SECTION(profiler, sid)\
         (profiler).endSection(sid);
+    #define SCOPED_SECTION(profiler, sid, name, T, parameter)\
+        ExecutionSectionScope<T> sectionScope_##sid(profiler, name, parameter, true);
 
     #define PUSH_PARENT_SECTION(profiler, sid)\
         (profiler).pushParentSection(sid);
     #define POP_PARENT_SECTION(profiler)\
         (profiler).popParentSection();
-    #define PROCESS_SECTIONS(profiler, time)\
-        (profiler).processLog(time);
-
-    #define SCOPED_SECTION(profiler, sid, type, parameter)\
-        START_SECTION(profiler, sid, type, parameter)\
-        PUSH_PARENT_SECTION(profiler, sid)\
-        ExecutionSectionScope sectionScope_##sid(profiler, sid, true);
+    #define PROCESS_SECTIONS(profiler, timeMs)\
+        (profiler).processLog(timeMs);
 #else
     #define START_SECTION(profiler, sid, type, parameter)
     #define END_SECTION(profiler, sid)
+    #define SCOPED_SECTION(profiler, sid, type, parameter)
     #define PUSH_PARENT_SECTION(profiler, sid)
     #define POP_PARENT_SECTION(profiler)
-    #define PROCESS_SECTIONS(profiler, time)
-    #define SCOPED_SECTION(profiler, sid, type, parameter)
+    #define PROCESS_SECTIONS(profiler, timeMs)
 #endif
 
-/* vm specific profiling defines */
+/* Miner specific profiling defines */
+#ifdef PROFILE_MINER
+    #define START_SECTION_MINER(profiler, sid, name, parameter)\
+        START_SECTION(profiler, sid, name, const char *, parameter)
+    #define END_SECTION_MINER(profiler, sid)\
+        END_SECTION(profiler, sid)
+    #define SCOPED_SECTION_MINER(profiler, sid, name, parameter)\
+        SCOPED_SECTION(profiler, sid, name, const char *, parameter)
+#else
+    #define START_SECTION_MINER(profiler, sid, type, parameter)
+    #define END_SECTION_MINER(profiler, sid)
+    #define SCOPED_SECTION_MINER(profiler, sid, name, parameter)
+#endif
+
+/* SecreC specific profiling defines */
+#ifdef PROFILE_SECREC
+    #define START_SECTION_SECREC(profiler, sid, type, parameter)\
+        START_SECTION(profiler, sid, type, uint32_t, parameter)
+    #define END_SECTION_SECREC(profiler, sid)\
+        END_SECTION(profiler, sid)
+    #define SCOPED_SECTION_SECREC(profiler, sid, name, parameter)\
+        SCOPED_SECTION(profiler, sid, name, uint32_t, parameter)
+#else
+    #define START_SECTION_SECREC(profiler, sid, type, parameter)
+    #define END_SECTION_SECREC(profiler, sid)
+    #define SCOPED_SECTION_SECREC(profiler, sid, name, parameter)
+#endif
+
+/* VM specific profiling defines */
 #ifdef PROFILE_VM
     #define START_SECTION_VM(profiler, sid, type, parameter)\
-        START_SECTION(profiler, sid, type, parameter)
+        START_SECTION(profiler, sid, type, const char *, parameter)
     #define END_SECTION_VM(profiler, sid)\
         END_SECTION(profiler, sid)
+    #define SCOPED_SECTION_VM(profiler, sid, name, parameter)\
+        SCOPED_SECTION(profiler, sid, name, const char *, parameter)
 #else
     #define START_SECTION_VM(profiler, sid, type, parameter)
     #define END_SECTION_VM(profiler, sid)
+    #define SCOPED_SECTION_VM(profiler, sid, name, parameter)
 #endif
 
-/* application specific profiling defines */
-#ifdef PROFILE_APP
-    #define START_SECTION_APP(profiler, sid, type, parameter)\
-        START_SECTION(profiler, sid, type, parameter)
-    #define END_SECTION_APP(profiler, sid)\
-        END_SECTION(profiler, sid)
 
-    #define START_INSTRUCTION_TIMER(profiler, x, instruction)\
-        uint64_t x = RakNet::GetTime ();
-    #define END_INSTRUCTION_TIMER(profiler, x)\
-        (profiler).logInstructionTime (instructionToExecute->OpName(), RakNet::GetTime() - x);
-    #define DUMP_INSTRUCTION_TIMINGS(profiler, filename)\
-        (profiler).dumpInstructionTimings (filename);
-#else
-    #define START_SECTION_APP(profiler, sid, type, parameter)
-    #define END_SECTION_APP(profiler, sid)
 
-    #define START_INSTRUCTION_TIMER(profiler, x, instruction)
-    #define END_INSTRUCTION_TIMER(profiler, x)
-    #define DUMP_INSTRUCTION_TIMINGS(profiler, filename)
-#endif
+union SectionName {
+    const char * const namePtr;
+    const uint32_t nameCacheId;
 
+    SectionName(const char * name) : namePtr(name) {}
+    SectionName(uint32_t cacheid) : nameCacheId(cacheid) {}
+};
 
 /**
  This is a data structure for storing executed sections for profiling purposes.
 
  This class is used internally by ExecutionProfiler.
 */
-struct ExecutionSection {
+class ExecutionSection {
+
+    friend class ExecutionProfiler;
 
 public:
 
     /**
      Constructs an execution section based on the given parameters
 
-     \param[in] actionCode a code describing what the section does (\see the ProfilerActionCode enum)
+     \param[in] sectionName a unique name describing what the section does
      \param[in] complexityParameter a number describing the O(n) complexity of the section
      \param[in] parentSectionId the identifier of a section which contains this one
     */
-    ExecutionSection(ProfilerActionCode actionCode, size_t complexityParameter, uint32_t parentSectionId);
+    ExecutionSection(const char * sectionName,
+                     uint32_t sectionId,
+                     uint32_t parentSectionId,
+                     MicrosecondTimerTime startTime,
+                     MicrosecondTimerTime endTime,
+                     size_t complexityParameter);
 
-    /**
-     Stores the action code of the section
-    */
-    ProfilerActionCode actionCode;
+    ExecutionSection(uint32_t sectionType,
+                     uint32_t sectionId,
+                     uint32_t parentSectionId,
+                     MicrosecondTimerTime startTime,
+                     MicrosecondTimerTime endTime,
+                     size_t complexityParameter);
 
-    /**
-     The identifier of this section
-    */
+    /** The identifier of this section */
     uint32_t sectionId;
 
-    /**
-     The identifier of the parent section containing this one (zero, if none)
-    */
+    /** The identifier of the parent section containing this one (zero, if none) */
     uint32_t parentSectionId;
 
-    /**
-     A timestamp for the moment the section started
-    */
-    uint64_t startTime;
+    /** A timestamp for the moment the section started */
+    MicrosecondTimerTime startTime;
 
-    /**
-     A timestamp for the moment the section was completed
-    */
-    uint64_t endTime;
+    /** A timestamp for the moment the section was completed */
+    MicrosecondTimerTime endTime;
 
-    /**
-     The O(n) complexity parameter for the section
-    */
+    /** The O(n) complexity parameter for the section */
     size_t complexityParameter;
 
+private:
+
+    /** The name identifier of this section */
+    const SectionName m_sectionName;
+    const bool m_nameCached;
 };
 
 
@@ -155,7 +168,7 @@ public:
 */
 class ExecutionProfiler {
 
-public:
+public: /* Methods: */
 
     ExecutionProfiler(ILogger & logger);
 
@@ -174,18 +187,57 @@ public:
     bool startLog(const std::string &filename);
 
     /**
+     Defines a new section type.
+
+     This method creates a new section type and maps an integer identifier to its name. The identifier can then be passed to startSection to identify the code section being profiled.
+     This allows to avoid performance penalty for having to copy the section name every time a section is started, as this process can happen very fast and often.
+
+     \param[in] name the name of section type, that will be used in the logging output to identify the type of section being logged.
+     \returns a unique identifier for the new section type.
+    */
+    uint32_t newSectionType(const char *name);
+
+    /**
      Specifies the starting point of a code section for profiling.
 
      This method is called before the profiled piece of code. The EndSection method is called after.
      The profiler will store timestamps of both events and compute durations during ProcessLog invocations.
 
-     \param[in] actionCode a value in the ActionCodes enum which specifies what is being done in the section
+     \param[in] sectionTypeName a value that specifies the type name of a section describing what is being done in the section
      \param[in] complexityParameter indicates the complexity parameter for the section (eg number of values in the processed vector)
      \param[in] parentSectionId the identifier of a section which contains this new section (see also: PushParentSection)
 
      \returns an unique identifier for the profiled code section which should be passed to EndSection later on
     */
-    uint32_t startSection(ProfilerActionCode actionCode, size_t complexityParameter, uint32_t parentSectionId = 0);
+    template<class T>
+    uint32_t startSection(T sectionTypeName,
+                                             size_t complexityParameter,
+                                             uint32_t parentSectionId = 0 )
+    {
+        if (!m_profilingActive)
+            return 0;
+
+        // Lock the list
+        boost::mutex::scoped_lock lock(m_profileLogMutex);
+
+        // Automatically set parent
+        uint32_t usedParentSectionId = (parentSectionId == 0 && m_parentSectionStack.size() > 0 ?
+                                        m_parentSectionStack.top() :
+                                        parentSectionId);
+
+        // Create the entry and store it
+        ExecutionSection * s = new ExecutionSection (sectionTypeName,
+                                                     m_nextSectionId++,
+                                                     usedParentSectionId,
+                                                     MicrosecondTimer_get_global_time() / 1000,
+                                                     0,
+                                                     complexityParameter);
+
+        m_sectionMap.insert(std::make_pair(s->sectionId, s));
+
+        //WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Started section " << s.sectionId << ".");
+        return s->sectionId;
+    }
 
     /**
      Completes the specified section.
@@ -229,7 +281,6 @@ public:
     */
     void pushParentSection(uint32_t sectionId);
 
-
     /**
      Pops a parent section identifier from the stack.
 
@@ -237,59 +288,60 @@ public:
     */
     void popParentSection();
 
-    void logInstructionTime (const std::string& name, uint64_t time);
 
-    void dumpInstructionTimings (const std::string& filename);
+private: /* Methods: */
 
-private:
+    void __processLog(uint32_t timeLimitMs, bool flush);
+
+    inline const char * getSectionName(ExecutionSection * s) const {
+        if (s->m_nameCached) {
+            std::map<uint32_t, char *>::const_iterator it = m_sectionTypes.find(s->m_sectionName.nameCacheId);
+            return (it == m_sectionTypes.end() ? "undefined_section" : it->second);
+        } else {
+            return s->m_sectionName.namePtr;
+        }
+    }
+
+private: /* Fields: */
 
     ILogger & m_logger;
 
-    timingmap m_instructionTimings;
-
-
-    /**
-     The name of the logfile to use
-    */
+    /** The name of the logfile to use */
     std::string m_filename;
 
-    /**
-     Handle of the file we write the profiling log to
-    */
+    /** Handle of the file we write the profiling log to */
     std::ofstream m_logfile;
+
+    /** The map of section types */
+    std::map<uint32_t, char *> m_sectionTypes;
+
+    /** The next available section type identifier */
+    uint32_t m_nextSectionTypeId;
 
     /**
      The stack of parent section identifiers.
 
      \see PushParentSection
     */
-    std::stack<uint32_t> m_sectionStack;
+    std::stack<uint32_t> m_parentSectionStack;
 
     /**
      The map of execution sections
 
      \see PushParentSection
      */
-    std::map<uint32_t, ExecutionSection> m_sectionMap;
+    std::map<uint32_t, ExecutionSection*> m_sectionMap;
 
-    /**
-     The cache of sections waiting for flushing to the disk
-    */
-    std::deque<ExecutionSection> m_sections;
+    /** The cache of sections waiting for flushing to the disk */
+    std::deque<ExecutionSection*> m_sections;
 
-    /**
-     The next available section identifier
-    */
+    /** The next available section identifier */
     uint32_t m_nextSectionId;
 
-    /**
-     The lock for the profiling log
-    */
+    /** The lock for the profiling log */
     boost::mutex m_profileLogMutex;
 
-    /**
-     True, if profiling is active
-     */
+    /** True, if profiling is active */
     bool m_profilingActive;
 
 };
@@ -298,36 +350,45 @@ private:
  This class is used to automatically end ExecutionProfile sections and pop
  parent sections if an instance of this class goes out of scope.
 */
+template <class T>
 class ExecutionSectionScope {
 
 public:
     /**
      Constructs the scope instance for the given section.
 
-     \param[in] sectionId the section id
-     \param[in] isParent is it parent and should it be popped.
+     \param[in] profiler the profiler instance to create this section on
+     \param[in] sectionTypeName the section type name identifier
+     \param[in] complexityParameter the O(n) parameter describing the complexity of this section
+     \param[in] pushParent whether or not to push a parent section and pop it when finished
     */
-    ExecutionSectionScope(ExecutionProfiler& profiler, uint32_t sectionId, bool isParent);
+    ExecutionSectionScope(ExecutionProfiler& profiler, T sectionTypeName, size_t complexityParameter, bool pushParent = true)
+        : m_profiler (profiler)
+        , m_sectionId (profiler.startSection<T>(sectionTypeName, complexityParameter))
+        , m_isParent (pushParent)
+    {
+        if (m_isParent)
+            m_profiler.pushParentSection(m_sectionId);
+    }
 
     /**
-     Ends the section and possibly pops the parent section
+     Pops the parent section and ends the section
     */
-    ~ExecutionSectionScope();
+    ~ExecutionSectionScope() {
+        if (m_isParent)
+            m_profiler.popParentSection();
+
+        m_profiler.endSection(m_sectionId);
+    }
 
 private:
-    /**
-     The identifier of the section to end.
-    */
+    /** The identifier of the section to end. */
     uint32_t m_sectionId;
 
-    /**
-     Indicates whether the section is parent section and should be popped.
-    */
+    /** Indicates whether the section is parent section and should be popped. */
     bool m_isParent;
 
-    /**
-      Holds the reference to the ExecutionProfiler instance
-    */
+    /** Holds the reference to the ExecutionProfiler instance. */
     ExecutionProfiler& m_profiler;
 };
 
