@@ -88,9 +88,12 @@ bool ExecutionProfiler::startLog(const string& filename)
 
         LogDebug(m_logger) << "Opened profiling log file '" << m_filename << "'!";
 
-        m_logfile << "SectionID" ", " << "ParentSectionID" << ", "
-                  << "Start" << ", " << "End" << ", "
-                  << "Action" << ", " << "Complexity" << endl;
+        m_logfile << "SectionID;"
+                     "ParentSectionID;"
+                     "Start;"
+                     "End;"
+                     "Action;"
+                     "Complexity" << endl;
 
         m_profilingActive = true;
         return true;
@@ -144,10 +147,12 @@ void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
         ExecutionSection * s = m_sections.front();
         //LogFullDebug(m_logger) << "[ExecutionProfiler] Logging section " << s.sectionId << ".";
 
-        m_logfile << s->sectionId << "," << s->parentSectionId << ","
-                  << s->startTime << "," << s->endTime << ","
-                  << getSectionName(s) << "," << s->complexityParameter
-                  << endl;
+        m_logfile << s->sectionId << ";"
+                  << s->parentSectionId << ";"
+                  << s->startTime << ";"
+                  << s->endTime << ";"
+                  << getSectionName(s) << ";"
+                  << s->complexityParameter << endl;
 
         delete s;
         m_sections.pop_front();
@@ -160,6 +165,9 @@ void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
 uint32_t ExecutionProfiler::newSectionType(const char * name) {
     if (!m_profilingActive)
         return 0;
+
+    // Lock the list
+    boost::mutex::scoped_lock lock(m_profileLogMutex);
 
     /// \todo Is it a good idea to reuse duplicate section types?
     for(map<uint32_t, char *>::iterator it = m_sectionTypes.begin();

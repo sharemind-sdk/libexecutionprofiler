@@ -211,8 +211,8 @@ public: /* Methods: */
     */
     template<class T>
     uint32_t startSection(T sectionTypeName,
-                                             size_t complexityParameter,
-                                             uint32_t parentSectionId = 0 )
+                          size_t complexityParameter,
+                          uint32_t parentSectionId = 0 )
     {
         if (!m_profilingActive)
             return 0;
