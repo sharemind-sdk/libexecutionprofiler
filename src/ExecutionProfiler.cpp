@@ -88,11 +88,10 @@ bool ExecutionProfiler::startLog(const string& filename)
 
         LogDebug(m_logger) << "Opened profiling log file '" << m_filename << "'!";
 
-        m_logfile << "SectionID;"
+        m_logfile << "Action;"
+                     "SectionID;"
                      "ParentSectionID;"
-                     "Start;"
-                     "End;"
-                     "Action;"
+                     "Duration;"
                      "Complexity" << endl;
 
         m_profilingActive = true;
@@ -147,11 +146,10 @@ void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
         ExecutionSection * s = m_sections.front();
         //LogFullDebug(m_logger) << "[ExecutionProfiler] Logging section " << s.sectionId << ".";
 
-        m_logfile << s->sectionId << ";"
+        m_logfile << getSectionName(s) << ";"
+                  << s->sectionId << ";"
                   << s->parentSectionId << ";"
-                  << s->startTime << ";"
-                  << s->endTime << ";"
-                  << getSectionName(s) << ";"
+                  << (s->endTime - s->startTime) << ";"
                   << s->complexityParameter << endl;
 
         delete s;
@@ -163,23 +161,27 @@ void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
 }
 
 uint32_t ExecutionProfiler::newSectionType(const char * name) {
+    assert(name);
+
     if (!m_profilingActive)
         return 0;
 
     // Lock the list
     boost::mutex::scoped_lock lock(m_profileLogMutex);
 
+    size_t n = strlen(name);
+
     /// \todo Is it a good idea to reuse duplicate section types?
     for(map<uint32_t, char *>::iterator it = m_sectionTypes.begin();
         it != m_sectionTypes.end(); ++it)
     {
-        if (strcmp(it->second, name) == 0)
+        if (strncmp(it->second, name, n) == 0)
             return it->first;
     }
 
-    size_t n = strlen(name);
     char * cname = new char[n + 1];
     strncpy(cname, name, n);
+    cname[n] = '\0';
 
     m_sectionTypes.insert(make_pair(m_nextSectionTypeId, cname));
     return m_nextSectionTypeId++;
