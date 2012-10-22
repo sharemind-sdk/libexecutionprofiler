@@ -201,7 +201,7 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
         return;
     }
 
-    it->second->endTime = MicrosecondTimer_get_global_time() / 1000;
+    it->second->endTime = MicrosecondTimer_get_global_time();
     m_sections.push_back(it->second);
     m_sectionMap.erase(it);
 }

@@ -23,25 +23,25 @@ namespace sharemind {
 class ILogger;
 class ExecutionProfiler;
 
-#define PROFILE_MINER
-#define PROFILE_SECREC
-#define PROFILE_VM
+//#define PROFILE_MINER
+//#define PROFILE_SECREC
+//#define PROFILE_VM
 
 /* common profiling defines */
 #if defined(PROFILE_MINER) || defined(PROFILE_SECREC) || defined(PROFILE_VM)
     #define START_SECTION(profiler, sid, name, T, parameter)\
-        uint32_t sid = (profiler).startSection<T> (name, parameter);
+        uint32_t (sid) = (profiler).startSection<T> ((name), (parameter));
     #define END_SECTION(profiler, sid)\
-        (profiler).endSection(sid);
+        (profiler).endSection((sid));
     #define SCOPED_SECTION(profiler, sid, name, T, parameter)\
-        ExecutionSectionScope<T> sectionScope_##sid(profiler, name, parameter, true);
+        ExecutionSectionScope<T> sectionScope_##sid((profiler), (name), (parameter), true);
 
     #define PUSH_PARENT_SECTION(profiler, sid)\
-        (profiler).pushParentSection(sid);
+        (profiler).pushParentSection((sid));
     #define POP_PARENT_SECTION(profiler)\
         (profiler).popParentSection();
     #define PROCESS_SECTIONS(profiler, timeMs)\
-        (profiler).processLog(timeMs);
+        (profiler).processLog((timeMs));
 #else
     #define START_SECTION(profiler, sid, type, parameter)
     #define END_SECTION(profiler, sid)
@@ -54,11 +54,11 @@ class ExecutionProfiler;
 /* Miner specific profiling defines */
 #ifdef PROFILE_MINER
     #define START_SECTION_MINER(profiler, sid, name, parameter)\
-        START_SECTION(profiler, sid, name, const char *, parameter)
+        START_SECTION((profiler), (sid), (name), const char *, (parameter))
     #define END_SECTION_MINER(profiler, sid)\
-        END_SECTION(profiler, sid)
+        END_SECTION((profiler), (sid))
     #define SCOPED_SECTION_MINER(profiler, sid, name, parameter)\
-        SCOPED_SECTION(profiler, sid, name, const char *, parameter)
+        SCOPED_SECTION((profiler), sid, (name), const char *, (parameter))
 #else
     #define START_SECTION_MINER(profiler, sid, type, parameter)
     #define END_SECTION_MINER(profiler, sid)
@@ -68,11 +68,11 @@ class ExecutionProfiler;
 /* SecreC specific profiling defines */
 #ifdef PROFILE_SECREC
     #define START_SECTION_SECREC(profiler, sid, type, parameter)\
-        START_SECTION(profiler, sid, type, uint32_t, parameter)
+        START_SECTION((profiler), (sid), (type), uint32_t, (parameter))
     #define END_SECTION_SECREC(profiler, sid)\
-        END_SECTION(profiler, sid)
+        END_SECTION((profiler), (sid))
     #define SCOPED_SECTION_SECREC(profiler, sid, name, parameter)\
-        SCOPED_SECTION(profiler, sid, name, uint32_t, parameter)
+        SCOPED_SECTION((profiler), sid, (name), uint32_t, (parameter))
 #else
     #define START_SECTION_SECREC(profiler, sid, type, parameter)
     #define END_SECTION_SECREC(profiler, sid)
@@ -82,11 +82,11 @@ class ExecutionProfiler;
 /* VM specific profiling defines */
 #ifdef PROFILE_VM
     #define START_SECTION_VM(profiler, sid, type, parameter)\
-        START_SECTION(profiler, sid, type, const char *, parameter)
+        START_SECTION((profiler), (sid), (type), const char *, (parameter))
     #define END_SECTION_VM(profiler, sid)\
-        END_SECTION(profiler, sid)
+        END_SECTION((profiler), (sid))
     #define SCOPED_SECTION_VM(profiler, sid, name, parameter)\
-        SCOPED_SECTION(profiler, sid, name, const char *, parameter)
+        SCOPED_SECTION((profiler), sid, (name), const char *, (parameter))
 #else
     #define START_SECTION_VM(profiler, sid, type, parameter)
     #define END_SECTION_VM(profiler, sid)
@@ -229,7 +229,7 @@ public: /* Methods: */
         ExecutionSection * s = new ExecutionSection (sectionTypeName,
                                                      m_nextSectionId++,
                                                      usedParentSectionId,
-                                                     MicrosecondTimer_get_global_time() / 1000,
+                                                     MicrosecondTimer_get_global_time(),
                                                      0,
                                                      complexityParameter);
 
