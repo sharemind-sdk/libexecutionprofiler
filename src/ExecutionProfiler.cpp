@@ -9,6 +9,7 @@
 
 #include "ExecutionProfiler.h"
 
+#include <cstring>
 #include <iostream>
 #include "Logger/Debug.h"
 
