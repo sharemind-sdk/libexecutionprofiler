@@ -218,7 +218,7 @@ public: /* Methods: */
             return 0;
 
         // Lock the list
-        boost::mutex::scoped_lock lock(m_profileLogMutex);
+        boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
 
         // Automatically set parent
         uint32_t usedParentSectionId = (parentSectionId == 0 && m_parentSectionStack.size() > 0 ?
