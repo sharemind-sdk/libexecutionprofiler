@@ -30,13 +30,13 @@ ExecutionSection::ExecutionSection(const char * sectionName,
                                    MicrosecondTimerTime startTime,
                                    MicrosecondTimerTime endTime,
                                    size_t complexityParameter)
-    : m_sectionName (sectionName)
-    , m_nameCached (false)
-    , sectionId (sectionId)
+    : sectionId (sectionId)
     , parentSectionId (parentSectionId)
     , startTime (startTime)
     , endTime (endTime)
     , complexityParameter (complexityParameter)
+    , m_sectionName (sectionName)
+    , m_nameCached (false)
 {
 }
 
@@ -46,13 +46,13 @@ ExecutionSection::ExecutionSection(uint32_t sectionType,
                                    MicrosecondTimerTime startTime,
                                    MicrosecondTimerTime endTime,
                                    size_t complexityParameter)
-    : m_sectionName (sectionType)
-    , m_nameCached (true)
-    , sectionId (sectionId)
+    : sectionId (sectionId)
     , parentSectionId (parentSectionId)
     , startTime (startTime)
     , endTime (endTime)
     , complexityParameter (complexityParameter)
+    , m_sectionName (sectionType)
+    , m_nameCached (true)
 {
 }
 
