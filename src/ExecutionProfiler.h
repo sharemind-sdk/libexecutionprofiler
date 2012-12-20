@@ -229,12 +229,12 @@ public: /* Methods: */
         ExecutionSection * s = new ExecutionSection (sectionTypeName,
                                                      m_nextSectionId++,
                                                      usedParentSectionId,
-                                                     MicrosecondTimer_get_global_time(),
+                                                     0,
                                                      0,
                                                      complexityParameter);
 
         m_sectionMap.insert(std::make_pair(s->sectionId, s));
-
+        s->startTime = MicrosecondTimer_get_global_time();
         //WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Started section " << s.sectionId << ".");
         return s->sectionId;
     }

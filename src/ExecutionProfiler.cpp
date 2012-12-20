@@ -193,6 +193,8 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
     if (!m_profilingActive)
         return;
 
+    const MicrosecondTimerTime endTime = MicrosecondTimer_get_global_time();
+
     // Lock the list
     boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
 
@@ -202,7 +204,7 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
         return;
     }
 
-    it->second->endTime = MicrosecondTimer_get_global_time();
+    it->second->endTime = endTime;
     m_sections.push_back(it->second);
     m_sectionMap.erase(it);
 }
