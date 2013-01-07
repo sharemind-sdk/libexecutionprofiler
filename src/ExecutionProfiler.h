@@ -97,7 +97,7 @@ class ExecutionProfiler;
 
 union SectionName {
     const char * namePtr;
-    const uint32_t nameCacheId;
+    uint32_t nameCacheId;
 
     SectionName(const char * name) : namePtr(name) {}
     SectionName(uint32_t cacheid) : nameCacheId(cacheid) {}
