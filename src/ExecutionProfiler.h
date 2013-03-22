@@ -15,6 +15,7 @@
 #include <iostream>
 #include <map>
 #include <stack>
+#include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include "MicrosecondTimer.h"
 
