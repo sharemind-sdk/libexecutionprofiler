@@ -95,14 +95,12 @@ class ExecutionProfiler;
 #endif
 
 
-
-union SectionName {
-    const char * namePtr;
-    uint32_t nameCacheId;
-
-    SectionName(const char * name) : namePtr(name) {}
-    SectionName(uint32_t cacheid) : nameCacheId(cacheid) {}
+struct NetworkStats {
+    uint64_t receivedBytes;
+    uint64_t sentBytes;
 };
+
+typedef std::map<size_t, NetworkStats> MinerNetworkStatistics;
 
 /**
  This is a data structure for storing executed sections for profiling purposes.
@@ -112,6 +110,16 @@ union SectionName {
 class ExecutionSection {
 
     friend class ExecutionProfiler;
+
+public: /* Types: */
+
+    union SectionName {
+        const char * namePtr;
+        uint32_t nameCacheId;
+
+        SectionName(const char * name) : namePtr(name) {}
+        SectionName(uint32_t cacheid) : nameCacheId(cacheid) {}
+    };
 
 public:
 
@@ -127,14 +135,16 @@ public:
                      uint32_t parentSectionId,
                      MicrosecondTimerTime startTime,
                      MicrosecondTimerTime endTime,
-                     size_t complexityParameter);
+                     size_t complexityParameter,
+                     const MinerNetworkStatistics &netStats);
 
     ExecutionSection(uint32_t sectionType,
                      uint32_t sectionId,
                      uint32_t parentSectionId,
                      MicrosecondTimerTime startTime,
                      MicrosecondTimerTime endTime,
-                     size_t complexityParameter);
+                     size_t complexityParameter,
+                     const MinerNetworkStatistics &netStats);
 
     /** The identifier of this section */
     uint32_t sectionId;
@@ -150,6 +160,18 @@ public:
 
     /** The O(n) complexity parameter for the section */
     size_t complexityParameter;
+
+    /**
+     * Network statistics for the moment the section started.
+     * Amounts of data (relevant to this section) transferred between local and remote miners.
+     */
+    MinerNetworkStatistics startNetworkStatistics;
+
+    /**
+     * Network statistics for the moment the section was completed.
+     * Amounts of data (relevant to this section) transferred between local and remote miners.
+     */
+    MinerNetworkStatistics endNetworkStatistics;
 
 private:
 
@@ -206,6 +228,7 @@ public: /* Methods: */
 
      \param[in] sectionTypeName a value that specifies the type name of a section describing what is being done in the section
      \param[in] complexityParameter indicates the complexity parameter for the section (eg number of values in the processed vector)
+     \param[in] startNetStats the network statistics measured in the beginning of the section.
      \param[in] parentSectionId the identifier of a section which contains this new section (see also: PushParentSection)
 
      \returns an unique identifier for the profiled code section which should be passed to EndSection later on
@@ -213,7 +236,8 @@ public: /* Methods: */
     template<class T>
     uint32_t startSection(T sectionTypeName,
                           size_t complexityParameter,
-                          uint32_t parentSectionId = 0 )
+                          const MinerNetworkStatistics &startNetStats,
+                          uint32_t parentSectionId = 0)
     {
         if (!m_profilingActive)
             return 0;
@@ -232,12 +256,24 @@ public: /* Methods: */
                                                      usedParentSectionId,
                                                      0,
                                                      0,
-                                                     complexityParameter);
+                                                     complexityParameter,
+                                                     startNetStats);
 
         m_sectionMap.insert(std::make_pair(s->sectionId, s));
         s->startTime = MicrosecondTimer_get_global_time();
         //WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Started section " << s.sectionId << ".");
         return s->sectionId;
+    }
+
+    template<class T>
+    uint32_t startSection(T sectionTypeName,
+                          size_t complexityParameter,
+                          uint32_t parentSectionId = 0)
+    {
+        return startSection<T>(sectionTypeName,
+                               complexityParameter,
+                               MinerNetworkStatistics(),
+                               parentSectionId);
     }
 
     /**
@@ -249,6 +285,20 @@ public: /* Methods: */
      \param[in] sectionId the id returned by StartSection. If no such section has been started, the method does nothing.
     */
     void endSection(uint32_t sectionId);
+
+    /**
+     Completes the specified section.
+
+     This method finds the section specified by sectionId and completes it.
+     The given end time is stored as the end timestamp for this section.
+
+     \param[in] sectionId the id returned by StartSection. If no such section has been started, the method does nothing.
+     \param[in] endTime the end time to be stored in the section specified by sectionId.
+     \param[in] endNetStats the network statistics measured in the end of the section.
+    */
+    void endSection(uint32_t sectionId,
+                    const MicrosecondTimerTime endTime,
+                    const MinerNetworkStatistics &endNetStats);
 
     /**
      Finishes profiling and writes cached section to the log file.

@@ -11,10 +11,37 @@
 
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include "Logger/Debug.h"
 
 
-namespace { SHAREMIND_DEFINE_PREFIXED_LOGS("[ExecutionProfiler] "); }
+namespace {
+SHAREMIND_DEFINE_PREFIXED_LOGS("[ExecutionProfiler] ");
+
+inline std::string minerNetworkStatistics(sharemind::MinerNetworkStatistics &startStats,
+                                          sharemind::MinerNetworkStatistics &endStats)
+{
+    assert (startStats.size() == endStats.size());
+
+    typedef sharemind::MinerNetworkStatistics::iterator MNIT;
+    std::ostringstream o;
+
+    for (MNIT sit = startStats.begin(); sit != startStats.end(); ++sit) {
+        MNIT eit = endStats.find(sit->first);
+        if (eit != endStats.end()) {
+            o << "[" << sit->first
+              << "," << (eit->second.receivedBytes - sit->second.receivedBytes)
+              << "," << (eit->second.sentBytes - sit->second.sentBytes)
+              << "] ";
+        } else {
+            return "";
+        }
+    }
+
+    return o.str();
+}
+
+}
 
 using std::endl;
 using std::make_pair;
@@ -29,14 +56,16 @@ ExecutionSection::ExecutionSection(const char * sectionName,
                                    uint32_t parentSectionId,
                                    MicrosecondTimerTime startTime,
                                    MicrosecondTimerTime endTime,
-                                   size_t complexityParameter)
-    : sectionId (sectionId)
-    , parentSectionId (parentSectionId)
-    , startTime (startTime)
-    , endTime (endTime)
-    , complexityParameter (complexityParameter)
-    , m_sectionName (sectionName)
-    , m_nameCached (false)
+                                   size_t complexityParameter,
+                                   const MinerNetworkStatistics &netStats)
+    : sectionId(sectionId)
+    , parentSectionId(parentSectionId)
+    , startTime(startTime)
+    , endTime(endTime)
+    , complexityParameter(complexityParameter)
+    , startNetworkStatistics(netStats)
+    , m_sectionName(sectionName)
+    , m_nameCached(false)
 {
 }
 
@@ -45,14 +74,16 @@ ExecutionSection::ExecutionSection(uint32_t sectionType,
                                    uint32_t parentSectionId,
                                    MicrosecondTimerTime startTime,
                                    MicrosecondTimerTime endTime,
-                                   size_t complexityParameter)
-    : sectionId (sectionId)
-    , parentSectionId (parentSectionId)
-    , startTime (startTime)
-    , endTime (endTime)
-    , complexityParameter (complexityParameter)
-    , m_sectionName (sectionType)
-    , m_nameCached (true)
+                                   size_t complexityParameter,
+                                   const MinerNetworkStatistics &netStats)
+    : sectionId(sectionId)
+    , parentSectionId(parentSectionId)
+    , startTime(startTime)
+    , endTime(endTime)
+    , complexityParameter(complexityParameter)
+    , startNetworkStatistics(netStats)
+    , m_sectionName(sectionType)
+    , m_nameCached(true)
 {
 }
 
@@ -93,7 +124,8 @@ bool ExecutionProfiler::startLog(const string& filename)
                      "SectionID;"
                      "ParentSectionID;"
                      "Duration;"
-                     "Complexity" << endl;
+                     "Complexity;"
+                     "NetworkStats[miner,in,out];" << endl;
 
         m_profilingActive = true;
         return true;
@@ -151,7 +183,10 @@ void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
                   << s->sectionId << ";"
                   << s->parentSectionId << ";"
                   << (s->endTime - s->startTime) << ";"
-                  << s->complexityParameter << endl;
+                  << s->complexityParameter << ";"
+                  << minerNetworkStatistics(s->startNetworkStatistics,
+                                            s->endNetworkStatistics)
+                  << endl;
 
         delete s;
         m_sections.pop_front();
@@ -193,7 +228,15 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
     if (!m_profilingActive)
         return;
 
-    const MicrosecondTimerTime endTime = MicrosecondTimer_get_global_time();
+    endSection(sectionId, MicrosecondTimer_get_global_time(), MinerNetworkStatistics());
+}
+
+void ExecutionProfiler::endSection(uint32_t sectionId,
+                                   const MicrosecondTimerTime endTime,
+                                   const MinerNetworkStatistics &endNetStats)
+{
+    if (!m_profilingActive)
+        return;
 
     // Lock the list
     boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
@@ -205,6 +248,7 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
     }
 
     it->second->endTime = endTime;
+    it->second->endNetworkStatistics = endNetStats;
     m_sections.push_back(it->second);
     m_sectionMap.erase(it);
 }
