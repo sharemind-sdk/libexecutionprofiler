@@ -246,9 +246,10 @@ public: /* Methods: */
         boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
 
         // Automatically set parent
-        uint32_t usedParentSectionId = (parentSectionId == 0 && m_parentSectionStack.size() > 0 ?
-                                        m_parentSectionStack.top() :
-                                        parentSectionId);
+        const uint32_t usedParentSectionId = parentSectionId == 0
+                                             && !m_parentSectionStack.empty()
+                                             ? m_parentSectionStack.top()
+                                             : parentSectionId;
 
         // Create the entry and store it
         ExecutionSection * s = new ExecutionSection (sectionTypeName,
