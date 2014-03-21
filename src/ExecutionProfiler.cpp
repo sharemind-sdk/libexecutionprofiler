@@ -155,7 +155,7 @@ void ExecutionProfiler::finishLog()
 
     // Close the log file, if necessary
     if (m_logfile.is_open()) {
-        LogDebug(m_logger) << "Closing prifiler log file '" << m_filename << "'";
+        LogDebug(m_logger) << "Closing profiler log file '" << m_filename << "'";
         m_logfile.close();
     }
 
