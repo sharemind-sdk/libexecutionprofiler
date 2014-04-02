@@ -106,7 +106,7 @@ bool ExecutionProfiler::startLog(const string& filename)
     m_filename = filename;
 
     // Lock the list
-    boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
+    std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
     // Check if we have a filename
     if (m_filename.length() > 0) {
@@ -144,7 +144,7 @@ void ExecutionProfiler::finishLog()
         return;
 
     // Lock the list
-    boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
+    std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
     LogDebug(m_logger) << "Flushing profiling log file.";
 
@@ -168,7 +168,7 @@ void ExecutionProfiler::processLog(uint32_t timeLimitMs, bool flush)
         return;
 
     // Lock the list
-    boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
+    std::lock_guard<std::mutex> lock(m_profileLogMutex);
     __processLog(timeLimitMs, flush);
 }
 
@@ -203,7 +203,7 @@ uint32_t ExecutionProfiler::newSectionType(const char * name) {
         return 0;
 
     // Lock the list
-    boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
+    std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
     size_t n = strlen(name);
 
@@ -239,7 +239,7 @@ void ExecutionProfiler::endSection(uint32_t sectionId,
         return;
 
     // Lock the list
-    boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
+    std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
     map<uint32_t, ExecutionSection*>::iterator it = m_sectionMap.find(sectionId);
     if (it == m_sectionMap.end()) {
@@ -259,7 +259,7 @@ void ExecutionProfiler::pushParentSection(uint32_t sectionId)
         return;
 
     // Lock the list
-    boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
+    std::lock_guard<std::mutex> lock(m_profileLogMutex);
     m_parentSectionStack.push(sectionId);
 }
 
@@ -269,7 +269,7 @@ void ExecutionProfiler::popParentSection()
         return;
 
     // Lock the list
-    boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
+    std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
     if (!m_parentSectionStack.empty())
         m_parentSectionStack.pop();

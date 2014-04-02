@@ -14,9 +14,8 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <stack>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/mutex.hpp>
 #include "MicrosecondTimer.h"
 
 namespace sharemind {
@@ -243,7 +242,7 @@ public: /* Methods: */
             return 0;
 
         // Lock the list
-        boost::lock_guard<boost::mutex> lock(m_profileLogMutex);
+        std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
         // Automatically set parent
         const uint32_t usedParentSectionId = parentSectionId == 0
@@ -391,7 +390,7 @@ private: /* Fields: */
     uint32_t m_nextSectionId;
 
     /** The lock for the profiling log */
-    boost::mutex m_profileLogMutex;
+    std::mutex m_profileLogMutex;
 
     /** True, if profiling is active */
     bool m_profilingActive;
