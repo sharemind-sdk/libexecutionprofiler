@@ -29,6 +29,7 @@ inline std::string minerNetworkStatistics(sharemind::MinerNetworkStatistics &sta
     for (MNIT sit = startStats.begin(); sit != startStats.end(); ++sit) {
         MNIT eit = endStats.find(sit->first);
         if (eit != endStats.end()) {
+            /// \note The reported byte count can overflow.
             o << "[" << sit->first
               << "," << (eit->second.receivedBytes - sit->second.receivedBytes)
               << "," << (eit->second.sentBytes - sit->second.sentBytes)
