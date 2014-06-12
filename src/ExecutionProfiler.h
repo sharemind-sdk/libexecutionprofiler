@@ -93,7 +93,7 @@ class ExecutionProfiler;
     #define SCOPED_SECTION_VM(profiler, sid, name, parameter)
 #endif
 
-#ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+#ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
 struct NetworkStats {
     uint64_t receivedBytes;
     uint64_t sentBytes;
@@ -136,7 +136,7 @@ public:
                      MicrosecondTimerTime startTime,
                      MicrosecondTimerTime endTime,
                      size_t complexityParameter
-                     #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                      , const MinerNetworkStatistics & netStats
                      #endif
                      );
@@ -147,7 +147,7 @@ public:
                      MicrosecondTimerTime startTime,
                      MicrosecondTimerTime endTime,
                      size_t complexityParameter
-                     #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                      , const MinerNetworkStatistics & netStats
                      #endif
                      );
@@ -167,7 +167,7 @@ public:
     /** The O(n) complexity parameter for the section */
     size_t complexityParameter;
 
-    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+    #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
     /**
      * Network statistics for the moment the section started.
      * Amounts of data (relevant to this section) transferred between local and remote miners.
@@ -228,7 +228,7 @@ public: /* Methods: */
     */
     uint32_t newSectionType(const char *name);
 
-    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+    #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
     /**
      Specifies the starting point of a code section for profiling.
 
@@ -263,7 +263,7 @@ public: /* Methods: */
         return startSection__<T>(
                     sectionTypeName,
                     complexityParameter,
-                    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                    #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                     MinerNetworkStatistics(),
                     #endif
                     parentSectionId);
@@ -291,7 +291,7 @@ public: /* Methods: */
     */
     void endSection(uint32_t sectionId,
                     const MicrosecondTimerTime endTime
-                    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                    #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                     , const MinerNetworkStatistics & endNetStats
                     #endif
                     );
@@ -355,7 +355,7 @@ private: /* Methods: */
     uint32_t startSection__(
             T sectionTypeName,
             size_t complexityParameter,
-            #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+            #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
             const MinerNetworkStatistics & startNetStats,
             #endif
             uint32_t parentSectionId = 0)
@@ -380,7 +380,7 @@ private: /* Methods: */
                     0,
                     0,
                     complexityParameter
-                    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                    #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                     , startNetStats
                     #endif
                     );
