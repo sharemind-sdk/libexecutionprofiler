@@ -18,8 +18,10 @@
 namespace {
 SHAREMIND_DEFINE_PREFIXED_LOGS("[ExecutionProfiler] ");
 
-inline std::string minerNetworkStatistics(sharemind::MinerNetworkStatistics &startStats,
-                                          sharemind::MinerNetworkStatistics &endStats)
+#ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+inline std::string minerNetworkStatistics(
+        sharemind::MinerNetworkStatistics & startStats,
+        sharemind::MinerNetworkStatistics & endStats)
 {
     assert (startStats.size() == endStats.size());
 
@@ -41,6 +43,7 @@ inline std::string minerNetworkStatistics(sharemind::MinerNetworkStatistics &sta
 
     return o.str();
 }
+#endif
 
 }
 
@@ -52,37 +55,49 @@ using std::map;
 
 namespace sharemind {
 
-ExecutionSection::ExecutionSection(const char * sectionName,
-                                   uint32_t sectionId,
-                                   uint32_t parentSectionId,
-                                   MicrosecondTimerTime startTime,
-                                   MicrosecondTimerTime endTime,
-                                   size_t complexityParameter,
-                                   const MinerNetworkStatistics &netStats)
+ExecutionSection::ExecutionSection(
+        const char * sectionName,
+        uint32_t sectionId,
+        uint32_t parentSectionId,
+        MicrosecondTimerTime startTime,
+        MicrosecondTimerTime endTime,
+        size_t complexityParameter
+        #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+        , const MinerNetworkStatistics & netStats
+        #endif
+        )
     : sectionId(sectionId)
     , parentSectionId(parentSectionId)
     , startTime(startTime)
     , endTime(endTime)
     , complexityParameter(complexityParameter)
+    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
     , startNetworkStatistics(netStats)
+    #endif
     , m_sectionName(sectionName)
     , m_nameCached(false)
 {
 }
 
-ExecutionSection::ExecutionSection(uint32_t sectionType,
-                                   uint32_t sectionId,
-                                   uint32_t parentSectionId,
-                                   MicrosecondTimerTime startTime,
-                                   MicrosecondTimerTime endTime,
-                                   size_t complexityParameter,
-                                   const MinerNetworkStatistics &netStats)
+ExecutionSection::ExecutionSection(
+        uint32_t sectionType,
+        uint32_t sectionId,
+        uint32_t parentSectionId,
+        MicrosecondTimerTime startTime,
+        MicrosecondTimerTime endTime,
+        size_t complexityParameter
+        #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+        , const MinerNetworkStatistics & netStats
+        #endif
+        )
     : sectionId(sectionId)
     , parentSectionId(parentSectionId)
     , startTime(startTime)
     , endTime(endTime)
     , complexityParameter(complexityParameter)
+    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
     , startNetworkStatistics(netStats)
+    #endif
     , m_sectionName(sectionType)
     , m_nameCached(true)
 {
@@ -184,9 +199,12 @@ void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
                   << s->sectionId << ";"
                   << s->parentSectionId << ";"
                   << (s->endTime - s->startTime) << ";"
-                  << s->complexityParameter << ";"
-                  << minerNetworkStatistics(s->startNetworkStatistics,
-                                            s->endNetworkStatistics)
+                  << s->complexityParameter
+                  #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                  << ";" << minerNetworkStatistics(
+                                s->startNetworkStatistics,
+                                s->endNetworkStatistics)
+                  #endif
                   << endl;
 
         delete s;
@@ -229,12 +247,21 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
     if (!m_profilingActive)
         return;
 
-    endSection(sectionId, MicrosecondTimer_get_global_time(), MinerNetworkStatistics());
+    endSection(sectionId,
+               MicrosecondTimer_get_global_time()
+               #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+               , MinerNetworkStatistics()
+               #endif
+               );
 }
 
-void ExecutionProfiler::endSection(uint32_t sectionId,
-                                   const MicrosecondTimerTime endTime,
-                                   const MinerNetworkStatistics &endNetStats)
+void ExecutionProfiler::endSection(
+        uint32_t sectionId,
+        const MicrosecondTimerTime endTime
+        #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+        , const MinerNetworkStatistics & endNetStats
+        #endif
+        )
 {
     if (!m_profilingActive)
         return;
@@ -249,7 +276,9 @@ void ExecutionProfiler::endSection(uint32_t sectionId,
     }
 
     it->second->endTime = endTime;
+    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
     it->second->endNetworkStatistics = endNetStats;
+    #endif
     m_sections.push_back(it->second);
     m_sectionMap.erase(it);
 }

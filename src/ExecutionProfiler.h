@@ -93,13 +93,14 @@ class ExecutionProfiler;
     #define SCOPED_SECTION_VM(profiler, sid, name, parameter)
 #endif
 
-
+#ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
 struct NetworkStats {
     uint64_t receivedBytes;
     uint64_t sentBytes;
 };
 
 typedef std::map<size_t, NetworkStats> MinerNetworkStatistics;
+#endif
 
 /**
  This is a data structure for storing executed sections for profiling purposes.
@@ -134,16 +135,22 @@ public:
                      uint32_t parentSectionId,
                      MicrosecondTimerTime startTime,
                      MicrosecondTimerTime endTime,
-                     size_t complexityParameter,
-                     const MinerNetworkStatistics &netStats);
+                     size_t complexityParameter
+                     #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                     , const MinerNetworkStatistics & netStats
+                     #endif
+                     );
 
     ExecutionSection(uint32_t sectionType,
                      uint32_t sectionId,
                      uint32_t parentSectionId,
                      MicrosecondTimerTime startTime,
                      MicrosecondTimerTime endTime,
-                     size_t complexityParameter,
-                     const MinerNetworkStatistics &netStats);
+                     size_t complexityParameter
+                     #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                     , const MinerNetworkStatistics & netStats
+                     #endif
+                     );
 
     /** The identifier of this section */
     uint32_t sectionId;
@@ -160,6 +167,7 @@ public:
     /** The O(n) complexity parameter for the section */
     size_t complexityParameter;
 
+    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
     /**
      * Network statistics for the moment the section started.
      * Amounts of data (relevant to this section) transferred between local and remote miners.
@@ -171,6 +179,7 @@ public:
      * Amounts of data (relevant to this section) transferred between local and remote miners.
      */
     MinerNetworkStatistics endNetworkStatistics;
+    #endif
 
 private:
 
@@ -219,6 +228,7 @@ public: /* Methods: */
     */
     uint32_t newSectionType(const char *name);
 
+    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
     /**
      Specifies the starting point of a code section for profiling.
 
@@ -235,45 +245,28 @@ public: /* Methods: */
     template<class T>
     uint32_t startSection(T sectionTypeName,
                           size_t complexityParameter,
-                          const MinerNetworkStatistics &startNetStats,
+                          const MinerNetworkStatistics & startNetStats,
                           uint32_t parentSectionId = 0)
     {
-        if (!m_profilingActive)
-            return 0;
-
-        // Lock the list
-        std::lock_guard<std::mutex> lock(m_profileLogMutex);
-
-        // Automatically set parent
-        const uint32_t usedParentSectionId = parentSectionId == 0
-                                             && !m_parentSectionStack.empty()
-                                             ? m_parentSectionStack.top()
-                                             : parentSectionId;
-
-        // Create the entry and store it
-        ExecutionSection * s = new ExecutionSection (sectionTypeName,
-                                                     m_nextSectionId++,
-                                                     usedParentSectionId,
-                                                     0,
-                                                     0,
-                                                     complexityParameter,
-                                                     startNetStats);
-
-        m_sectionMap.insert(std::make_pair(s->sectionId, s));
-        s->startTime = MicrosecondTimer_get_global_time();
-        //WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Started section " << s.sectionId << ".");
-        return s->sectionId;
+        return startSection__<T>(std::move(sectionTypeName),
+                                 complexityParameter,
+                                 startNetStats,
+                                 parentSectionId);
     }
+    #endif
 
     template<class T>
     uint32_t startSection(T sectionTypeName,
                           size_t complexityParameter,
                           uint32_t parentSectionId = 0)
     {
-        return startSection<T>(sectionTypeName,
-                               complexityParameter,
-                               MinerNetworkStatistics(),
-                               parentSectionId);
+        return startSection__<T>(
+                    sectionTypeName,
+                    complexityParameter,
+                    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                    MinerNetworkStatistics(),
+                    #endif
+                    parentSectionId);
     }
 
     /**
@@ -297,8 +290,11 @@ public: /* Methods: */
      \param[in] endNetStats the network statistics measured in the end of the section.
     */
     void endSection(uint32_t sectionId,
-                    const MicrosecondTimerTime endTime,
-                    const MinerNetworkStatistics &endNetStats);
+                    const MicrosecondTimerTime endTime
+                    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                    , const MinerNetworkStatistics & endNetStats
+                    #endif
+                    );
 
     /**
      Finishes profiling and writes cached section to the log file.
@@ -341,6 +337,59 @@ public: /* Methods: */
 
 
 private: /* Methods: */
+
+    /**
+     Specifies the starting point of a code section for profiling.
+
+     This method is called before the profiled piece of code. The EndSection method is called after.
+     The profiler will store timestamps of both events and compute durations during ProcessLog invocations.
+
+     \param[in] sectionTypeName a value that specifies the type name of a section describing what is being done in the section
+     \param[in] complexityParameter indicates the complexity parameter for the section (eg number of values in the processed vector)
+     \param[in] startNetStats the network statistics measured in the beginning of the section.
+     \param[in] parentSectionId the identifier of a section which contains this new section (see also: PushParentSection)
+
+     \returns an unique identifier for the profiled code section which should be passed to EndSection later on
+    */
+    template<class T>
+    uint32_t startSection__(
+            T sectionTypeName,
+            size_t complexityParameter,
+            #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+            const MinerNetworkStatistics & startNetStats,
+            #endif
+            uint32_t parentSectionId = 0)
+    {
+        if (!m_profilingActive)
+            return 0;
+
+        // Lock the list
+        std::lock_guard<std::mutex> lock(m_profileLogMutex);
+
+        // Automatically set parent
+        const uint32_t usedParentSectionId = parentSectionId == 0
+                                             && !m_parentSectionStack.empty()
+                                             ? m_parentSectionStack.top()
+                                             : parentSectionId;
+
+        // Create the entry and store it
+        ExecutionSection * const s = new ExecutionSection(
+                    sectionTypeName,
+                    m_nextSectionId++,
+                    usedParentSectionId,
+                    0,
+                    0,
+                    complexityParameter
+                    #ifdef SHAREMIND_NETWORK_TRANSPORTSTATISTICSLAYER_ENABLE
+                    , startNetStats
+                    #endif
+                    );
+
+        m_sectionMap.insert(std::make_pair(s->sectionId, s));
+        s->startTime = MicrosecondTimer_get_global_time();
+        //WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Started section " << s.sectionId << ".");
+        return s->sectionId;
+    }
 
     void __processLog(uint32_t timeLimitMs, bool flush);
 
