@@ -12,11 +12,9 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
-#include "Logger/Debug.h"
 
 
 namespace {
-SHAREMIND_DEFINE_PREFIXED_LOGS("[ExecutionProfiler] ");
 
 #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
 inline std::string minerNetworkStatistics(
@@ -103,20 +101,6 @@ ExecutionSection::ExecutionSection(
 {
 }
 
-ExecutionProfiler::ExecutionProfiler(ILogger & logger)
-  : m_logger(logger)
-  , m_nextSectionTypeId(0)
-  , m_nextSectionId(0)
-  , m_profilingActive(false)
-{
-}
-
-
-ExecutionProfiler::~ExecutionProfiler()
-{
-    finishLog();
-}
-
 bool ExecutionProfiler::startLog(const string& filename)
 {
     m_filename = filename;
@@ -130,11 +114,12 @@ bool ExecutionProfiler::startLog(const string& filename)
         // Try to open the log file
         m_logfile.open(m_filename.c_str());
         if (m_logfile.bad() || m_logfile.fail()) {
-            LogError(m_logger) << "Can not open profiler log file '" << m_filename << "'!";
+            m_logger.error() << "Can not open profiler log file '" << m_filename
+                             << "'!";
             return false;
         }
 
-        LogDebug(m_logger) << "Opened profiling log file '" << m_filename << "'!";
+        m_logger.debug() << "Opened profiling log file '" << m_filename << "'!";
 
         m_logfile << "Action;"
                      "SectionID;"
@@ -149,7 +134,7 @@ bool ExecutionProfiler::startLog(const string& filename)
     } else {
 
         // We didn't get a filename so spread the information about that.
-        LogError(m_logger) << "Empty log file name!";
+        m_logger.error() << "Empty log file name!";
         return false;
     }
 }
@@ -162,7 +147,7 @@ void ExecutionProfiler::finishLog()
     // Lock the list
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
-    LogDebug(m_logger) << "Flushing profiling log file.";
+    m_logger.debug() << "Flushing profiling log file.";
 
     // Flush all sections to the disc
     while (m_sections.size() > 0) {
@@ -171,7 +156,7 @@ void ExecutionProfiler::finishLog()
 
     // Close the log file, if necessary
     if (m_logfile.is_open()) {
-        LogDebug(m_logger) << "Closing profiler log file '" << m_filename << "'";
+        m_logger.debug() << "Closing profiler log file '" << m_filename << "'";
         m_logfile.close();
     }
 
@@ -193,7 +178,7 @@ void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
 
     while (MicrosecondTimer_get_global_time() < end && m_sections.size() > 0) {
         ExecutionSection * s = m_sections.front();
-        //LogFullDebug(m_logger) << "[ExecutionProfiler] Logging section " << s.sectionId << ".";
+        // m_logger.fullDebug() << "Logging section " << s.sectionId << ".";
 
         m_logfile << getSectionName(s) << ";"
                   << s->sectionId << ";"
@@ -271,7 +256,8 @@ void ExecutionProfiler::endSection(
 
     map<uint32_t, ExecutionSection*>::iterator it = m_sectionMap.find(sectionId);
     if (it == m_sectionMap.end()) {
-        LogError(m_logger) << "Could not end section " << sectionId << ". Not in queue.";
+        m_logger.error() << "Could not end section " << sectionId
+                         << ". Not in queue.";
         return;
     }
 

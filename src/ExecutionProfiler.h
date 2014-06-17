@@ -15,12 +15,13 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <sharemind/common/Logger/ILogger.h>
 #include <stack>
 #include "MicrosecondTimer.h"
 
+
 namespace sharemind {
 
-class ILogger;
 class ExecutionProfiler;
 
 //#define PROFILE_MINER
@@ -201,9 +202,14 @@ class ExecutionProfiler {
 
 public: /* Methods: */
 
-    ExecutionProfiler(ILogger & logger);
+    ExecutionProfiler(ILogger & logger)
+        : m_logger(logger, "[ExecutionProfiler]")
+        , m_nextSectionTypeId(0)
+        , m_nextSectionId(0)
+        , m_profilingActive(false)
+    {}
 
-    ~ExecutionProfiler();
+    inline ~ExecutionProfiler() noexcept { finishLog(); }
 
     /**
      Starts the profiler by specifying a log file to write sections into.
@@ -404,7 +410,7 @@ private: /* Methods: */
 
 private: /* Fields: */
 
-    ILogger & m_logger;
+    ILogger::Wrapped m_logger;
 
     /** The name of the logfile to use */
     std::string m_filename;
