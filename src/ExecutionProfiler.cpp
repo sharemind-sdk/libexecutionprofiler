@@ -101,42 +101,32 @@ ExecutionSection::ExecutionSection(
 {
 }
 
-bool ExecutionProfiler::startLog(const string& filename)
-{
+bool ExecutionProfiler::startLog(const string & filename) {
+    assert(!filename.empty());
     m_filename = filename;
 
     // Lock the list
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
-    // Check if we have a filename
-    if (m_filename.length() > 0) {
-
-        // Try to open the log file
-        m_logfile.open(m_filename.c_str());
-        if (m_logfile.bad() || m_logfile.fail()) {
-            m_logger.error() << "Can not open profiler log file '" << m_filename
-                             << "'!";
-            return false;
-        }
-
-        m_logger.debug() << "Opened profiling log file '" << m_filename << "'!";
-
-        m_logfile << "Action;"
-                     "SectionID;"
-                     "ParentSectionID;"
-                     "Duration;"
-                     "Complexity;"
-                     "NetworkStats[miner,in,out];" << endl;
-
-        m_profilingActive = true;
-        return true;
-
-    } else {
-
-        // We didn't get a filename so spread the information about that.
-        m_logger.error() << "Empty log file name!";
+    // Try to open the log file
+    m_logfile.open(m_filename.c_str());
+    if (m_logfile.bad() || m_logfile.fail()) {
+        m_logger.error() << "Can not open profiler log file '" << m_filename
+                         << "'!";
         return false;
     }
+
+    m_logger.debug() << "Opened profiling log file '" << m_filename << "'!";
+
+    m_logfile << "Action;"
+                 "SectionID;"
+                 "ParentSectionID;"
+                 "Duration;"
+                 "Complexity;"
+                 "NetworkStats[miner,in,out];" << endl;
+
+    m_profilingActive = true;
+    return true;
 }
 
 void ExecutionProfiler::finishLog()
