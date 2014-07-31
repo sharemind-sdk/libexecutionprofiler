@@ -15,7 +15,7 @@
 #include <iostream>
 #include <map>
 #include <mutex>
-#include <sharemind/common/Logger/ILogger.h>
+#include <sharemind/common/Logger/Logger.h>
 #include <stack>
 #include "MicrosecondTimer.h"
 
@@ -202,7 +202,7 @@ class ExecutionProfiler {
 
 public: /* Methods: */
 
-    ExecutionProfiler(ILogger & logger)
+    ExecutionProfiler(const Logger & logger)
         : m_logger(logger, "[ExecutionProfiler]")
         , m_nextSectionTypeId(0)
         , m_nextSectionId(0)
@@ -410,7 +410,7 @@ private: /* Methods: */
 
 private: /* Fields: */
 
-    ILogger::Wrapped m_logger;
+    const Logger m_logger;
 
     /** The name of the logfile to use */
     std::string m_filename;
