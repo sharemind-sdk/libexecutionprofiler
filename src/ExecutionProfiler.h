@@ -15,8 +15,8 @@
 #include <iostream>
 #include <map>
 #include <mutex>
-#include <sharemind/common/Logger/Logger.h>
 #include <stack>
+#include "Logger/Logger.h"
 #include "MicrosecondTimer.h"
 
 
