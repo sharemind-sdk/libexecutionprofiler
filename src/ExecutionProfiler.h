@@ -13,10 +13,10 @@
 #include <deque>
 #include <fstream>
 #include <iostream>
+#include <LogHard/Logger.h>
 #include <map>
 #include <mutex>
 #include <stack>
-#include "Logger/Logger.h"
 #include "MicrosecondTimer.h"
 
 
@@ -202,7 +202,7 @@ class ExecutionProfiler {
 
 public: /* Methods: */
 
-    ExecutionProfiler(const Logger & logger)
+    ExecutionProfiler(const LogHard::Logger & logger)
         : m_logger(logger, "[ExecutionProfiler]")
         , m_nextSectionTypeId(0)
         , m_nextSectionId(0)
@@ -410,7 +410,7 @@ private: /* Methods: */
 
 private: /* Fields: */
 
-    const Logger m_logger;
+    const LogHard::Logger m_logger;
 
     /** The name of the logfile to use */
     std::string m_filename;
