@@ -57,8 +57,8 @@ ExecutionSection::ExecutionSection(
         const char * sectionName,
         uint32_t sectionId,
         uint32_t parentSectionId,
-        MicrosecondTimerTime startTime,
-        MicrosecondTimerTime endTime,
+        UsTime startTime,
+        UsTime endTime,
         size_t complexityParameter
         #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
         , const MinerNetworkStatistics & netStats
@@ -81,8 +81,8 @@ ExecutionSection::ExecutionSection(
         uint32_t sectionType,
         uint32_t sectionId,
         uint32_t parentSectionId,
-        MicrosecondTimerTime startTime,
-        MicrosecondTimerTime endTime,
+        UsTime startTime,
+        UsTime endTime,
         size_t complexityParameter
         #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
         , const MinerNetworkStatistics & netStats
@@ -164,10 +164,10 @@ void ExecutionProfiler::processLog(uint32_t timeLimitMs, bool flush)
 }
 
 void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
-    MicrosecondTimerTime end = MicrosecondTimer_get_global_time() + timeLimitMs * 1000;
+    const UsTime end = getUsTime() + timeLimitMs * 1000u;
 
-    while (MicrosecondTimer_get_global_time() < end && m_sections.size() > 0) {
-        ExecutionSection * s = m_sections.front();
+    while (getUsTime() < end && m_sections.size() > 0u) {
+        ExecutionSection * const s = m_sections.front();
         // m_logger.fullDebug() << "Logging section " << s.sectionId << ".";
 
         m_logfile << getSectionName(s) << ";"
@@ -223,7 +223,7 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
         return;
 
     endSection(sectionId,
-               MicrosecondTimer_get_global_time()
+               getUsTime()
                #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                , MinerNetworkStatistics()
                #endif
@@ -232,7 +232,7 @@ void ExecutionProfiler::endSection(uint32_t sectionId)
 
 void ExecutionProfiler::endSection(
         uint32_t sectionId,
-        const MicrosecondTimerTime endTime
+        const UsTime endTime
         #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
         , const MinerNetworkStatistics & endNetStats
         #endif

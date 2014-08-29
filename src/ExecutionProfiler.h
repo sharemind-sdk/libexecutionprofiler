@@ -17,7 +17,7 @@
 #include <map>
 #include <mutex>
 #include <stack>
-#include "MicrosecondTimer.h"
+#include "MicrosecondTime.h"
 
 
 namespace sharemind {
@@ -134,8 +134,8 @@ public:
     ExecutionSection(const char * sectionName,
                      uint32_t sectionId,
                      uint32_t parentSectionId,
-                     MicrosecondTimerTime startTime,
-                     MicrosecondTimerTime endTime,
+                     UsTime startTime,
+                     UsTime endTime,
                      size_t complexityParameter
                      #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                      , const MinerNetworkStatistics & netStats
@@ -145,8 +145,8 @@ public:
     ExecutionSection(uint32_t sectionType,
                      uint32_t sectionId,
                      uint32_t parentSectionId,
-                     MicrosecondTimerTime startTime,
-                     MicrosecondTimerTime endTime,
+                     UsTime startTime,
+                     UsTime endTime,
                      size_t complexityParameter
                      #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                      , const MinerNetworkStatistics & netStats
@@ -160,10 +160,10 @@ public:
     uint32_t parentSectionId;
 
     /** A timestamp for the moment the section started */
-    MicrosecondTimerTime startTime;
+    UsTime startTime;
 
     /** A timestamp for the moment the section was completed */
-    MicrosecondTimerTime endTime;
+    UsTime endTime;
 
     /** The O(n) complexity parameter for the section */
     size_t complexityParameter;
@@ -296,7 +296,7 @@ public: /* Methods: */
      \param[in] endNetStats the network statistics measured in the end of the section.
     */
     void endSection(uint32_t sectionId,
-                    const MicrosecondTimerTime endTime
+                    const UsTime endTime
                     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                     , const MinerNetworkStatistics & endNetStats
                     #endif
@@ -392,7 +392,7 @@ private: /* Methods: */
                     );
 
         m_sectionMap.insert(std::make_pair(s->sectionId, s));
-        s->startTime = MicrosecondTimer_get_global_time();
+        s->startTime = getUsTime();
         //WRITE_LOG_FULLDEBUG (m_logger, "[ExecutionProfiler] Started section " << s.sectionId << ".");
         return s->sectionId;
     }
