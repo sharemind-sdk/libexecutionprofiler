@@ -1,0 +1,17 @@
+#
+# Copyright (C) Cybernetica AS
+#
+# All rights are reserved. Reproduction in whole or part is prohibited
+# without the written consent of the copyright owner. The usage of this
+# code is subject to the appropriate license agreement.
+#
+
+# This file defines the following variables:
+#   SharemindLibExecutionProfiler_INCLUDE_DIRS - include directories
+#   SharemindLibExecutionProfiler_LIBRARIES    - libraries to link against
+#   SharemindLibExecutionProfiler_DEFINITIONS  - required compiler definitions
+
+
+SET(SharemindLibExecutionProfiler_INCLUDE_DIRS @LIBEXECUTIONPROFILER_INSTALL_INCLUDE_DIRS@)
+SET(SharemindLibExecutionProfiler_LIBRARIES @LIBEXECUTIONPROFILER_INSTALL_LINK_LIBRARIES@)
+SET(SharemindLibExecutionProfiler_DEFINITIONS @LIBEXECUTIONPROFILER_INSTALL_DEFINITIONS@)

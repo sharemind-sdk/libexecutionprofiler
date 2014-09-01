@@ -7,8 +7,8 @@
  * code is subject to the appropriate license agreement.
  */
 
-#ifndef SHAREMINDCOMMON_EXECUTIONPROFILER_H
-#define SHAREMINDCOMMON_EXECUTIONPROFILER_H
+#ifndef SHAREMIND_EXECUTIONPROFILER_H
+#define SHAREMIND_EXECUTIONPROFILER_H
 
 #include <deque>
 #include <fstream>
@@ -16,8 +16,8 @@
 #include <LogHard/Logger.h>
 #include <map>
 #include <mutex>
+#include <sharemind/MicrosecondTime.h>
 #include <stack>
-#include "MicrosecondTime.h"
 
 
 namespace sharemind {
@@ -500,4 +500,4 @@ private:
 
 } /* namespace sharemind { */
 
-#endif /* SHAREMINDCOMMON_EXECUTIONPROFILER_H */
+#endif /* SHAREMIND_EXECUTIONPROFILER_H */
