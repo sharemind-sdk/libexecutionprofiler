@@ -308,16 +308,20 @@ public: /* Methods: */
     void finishLog();
 
     /**
-     Processes and logs sections cached in memory.
+     Processes and writes all sections cached in memory to disk.
 
-     If more than a thousand sections are cached, work for the allowed time of milliseconds
-     and write as many as possible to the disk. For each section the duration is also computed.
-
-     \param[in] timeLimitMs the number of milliseconds allowed for flushing sections to the file.
-     If this is zero, no sections are flushed. The default value for this parameter is 10.
-     \param[in] flush if true, flushes the sections, false by default
+     \param[in] timeLimitMs the number of milliseconds allowed for processing the sections.
+     If this is zero, no sections are processed.
     */
-    void processLog(uint32_t timeLimitMs = 10, bool flush = false);
+    void processLog();
+
+    /**
+     Processes and writes sections cached in memory to disk for the given duration of time in ms.
+
+     \param[in] timeLimitMs the number of milliseconds allowed for processing the sections.
+     If this is zero, no sections are processed.
+    */
+    void processLog(uint32_t timeLimitMs);
 
     /**
      Specifies a default parent section for subsequent sections.
@@ -397,7 +401,8 @@ private: /* Methods: */
         return s->sectionId;
     }
 
-    void __processLog(uint32_t timeLimitMs, bool flush);
+    void __processLog();
+    void __processLog(uint32_t timeLimitMs);
 
     inline const char * getSectionName(ExecutionSection * s) const {
         if (s->m_nameCached) {

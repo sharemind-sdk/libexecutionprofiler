@@ -129,20 +129,13 @@ bool ExecutionProfiler::startLog(const string & filename) {
     return true;
 }
 
-void ExecutionProfiler::finishLog()
-{
+void ExecutionProfiler::finishLog() {
     if (!m_profilingActive)
         return;
 
     // Lock the list
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
-
-    m_logger.debug() << "Flushing profiling log file.";
-
-    // Flush all sections to the disc
-    while (m_sections.size() > 0) {
-        __processLog(1000, true);
-    }
+    __processLog();
 
     // Close the log file, if necessary
     if (m_logfile.is_open()) {
@@ -153,22 +146,37 @@ void ExecutionProfiler::finishLog()
     m_profilingActive = false;
 }
 
-void ExecutionProfiler::processLog(uint32_t timeLimitMs, bool flush)
-{
+void ExecutionProfiler::processLog() {
+    if (!m_profilingActive)
+        return;
+
+    std::lock_guard<std::mutex> lock(m_profileLogMutex);
+    __processLog();
+}
+
+void ExecutionProfiler::__processLog() {
+    m_logger.debug() << "Writing profiling log file '" << m_filename << "'";
+
+    // Write all sections to the disc
+    while (m_sections.size() > 0) {
+        __processLog(1000u);
+    }
+}
+
+void ExecutionProfiler::processLog(uint32_t timeLimitMs) {
     if (!m_profilingActive)
         return;
 
     // Lock the list
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
-    __processLog(timeLimitMs, flush);
+    __processLog(timeLimitMs);
 }
 
-void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
+void ExecutionProfiler::__processLog(uint32_t timeLimitMs) {
     const UsTime end = getUsTime() + timeLimitMs * 1000u;
 
     while (getUsTime() < end && m_sections.size() > 0u) {
         ExecutionSection * const s = m_sections.front();
-        // m_logger.fullDebug() << "Logging section " << s.sectionId << ".";
 
         m_logfile << getSectionName(s) << ";"
                   << s->sectionId << ";"
@@ -186,8 +194,7 @@ void ExecutionProfiler::__processLog(uint32_t timeLimitMs, bool flush) {
         m_sections.pop_front();
     }
 
-    if (flush)
-        m_logfile.flush();
+    m_logfile.flush();
 }
 
 uint32_t ExecutionProfiler::newSectionType(const char * name) {
@@ -217,8 +224,7 @@ uint32_t ExecutionProfiler::newSectionType(const char * name) {
     return m_nextSectionTypeId++;
 }
 
-void ExecutionProfiler::endSection(uint32_t sectionId)
-{
+void ExecutionProfiler::endSection(uint32_t sectionId) {
     if (!m_profilingActive)
         return;
 
@@ -259,8 +265,7 @@ void ExecutionProfiler::endSection(
     m_sectionMap.erase(it);
 }
 
-void ExecutionProfiler::pushParentSection(uint32_t sectionId)
-{
+void ExecutionProfiler::pushParentSection(uint32_t sectionId) {
     if (!m_profilingActive)
         return;
 
@@ -269,8 +274,7 @@ void ExecutionProfiler::pushParentSection(uint32_t sectionId)
     m_parentSectionStack.push(sectionId);
 }
 
-void ExecutionProfiler::popParentSection()
-{
+void ExecutionProfiler::popParentSection() {
     if (!m_profilingActive)
         return;
 
