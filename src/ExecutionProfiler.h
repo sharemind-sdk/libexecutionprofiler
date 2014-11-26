@@ -138,7 +138,8 @@ public:
                      UsTime endTime,
                      size_t complexityParameter
                      #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
-                     , const MinerNetworkStatistics & netStats
+                     , const MinerNetworkStatistics & startNetStats
+                     , const MinerNetworkStatistics & endNetStats
                      #endif
                      );
 
@@ -149,7 +150,8 @@ public:
                      UsTime endTime,
                      size_t complexityParameter
                      #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
-                     , const MinerNetworkStatistics & netStats
+                     , const MinerNetworkStatistics & startNetStats
+                     , const MinerNetworkStatistics & endNetStats
                      #endif
                      );
 
@@ -392,6 +394,7 @@ private: /* Methods: */
                     complexityParameter
                     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                     , startNetStats
+                    , MinerNetworkStatistics()
                     #endif
                     );
 

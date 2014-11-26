@@ -61,7 +61,8 @@ ExecutionSection::ExecutionSection(
         UsTime endTime,
         size_t complexityParameter
         #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
-        , const MinerNetworkStatistics & netStats
+        , const MinerNetworkStatistics & startNetStats
+        , const MinerNetworkStatistics & endNetStats
         #endif
         )
     : sectionId(sectionId)
@@ -70,7 +71,8 @@ ExecutionSection::ExecutionSection(
     , endTime(endTime)
     , complexityParameter(complexityParameter)
     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
-    , startNetworkStatistics(netStats)
+    , startNetworkStatistics(startNetStats)
+    , endNetworkStatistics(endNetStats)
     #endif
     , m_sectionName(sectionName)
     , m_nameCached(false)
@@ -85,7 +87,8 @@ ExecutionSection::ExecutionSection(
         UsTime endTime,
         size_t complexityParameter
         #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
-        , const MinerNetworkStatistics & netStats
+        , const MinerNetworkStatistics & startNetStats
+        , const MinerNetworkStatistics & endNetStats
         #endif
         )
     : sectionId(sectionId)
@@ -94,7 +97,8 @@ ExecutionSection::ExecutionSection(
     , endTime(endTime)
     , complexityParameter(complexityParameter)
     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
-    , startNetworkStatistics(netStats)
+    , startNetworkStatistics(startNetStats)
+    , endNetworkStatistics(endNetStats)
     #endif
     , m_sectionName(sectionType)
     , m_nameCached(true)
