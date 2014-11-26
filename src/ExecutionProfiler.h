@@ -236,6 +236,48 @@ public: /* Methods: */
     */
     uint32_t newSectionType(const char *name);
 
+    template<class T>
+    uint32_t addSection(T sectionTypeName,
+                        size_t complexityParameter,
+                        UsTime startTime,
+                        UsTime endTime,
+                        #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
+                        const MinerNetworkStatistics & startNetStats,
+                        const MinerNetworkStatistics & endNetStats,
+                        #endif
+                        uint32_t parentSectionId = 0)
+    {
+        if (!m_profilingActive)
+            return 0;
+
+        // Lock the list
+        std::lock_guard<std::mutex> lock(m_profileLogMutex);
+
+        // Automatically set parent
+        const uint32_t usedParentSectionId = parentSectionId == 0
+                                             && !m_parentSectionStack.empty()
+                                             ? m_parentSectionStack.top()
+                                             : parentSectionId;
+
+        // Create the entry and store it
+        ExecutionSection * const s = new ExecutionSection(
+                    sectionTypeName,
+                    m_nextSectionId++,
+                    usedParentSectionId,
+                    startTime,
+                    endTime,
+                    complexityParameter
+                    #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
+                    , startNetStats
+                    , endNetStats
+                    #endif
+                    );
+
+        m_sections.push_back(s);
+
+        return s->sectionId;
+    }
+
     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
     /**
      Specifies the starting point of a code section for profiling.
