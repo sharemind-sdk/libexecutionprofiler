@@ -118,12 +118,15 @@ bool ExecutionProfiler::startLog(const string & filename) {
 
     m_logger.debug() << "Opened profiling log file '" << m_filename << "'!";
 
-    m_logfile << "Action;"
-                 "SectionID;"
-                 "ParentSectionID;"
-                 "Duration;"
-                 "Complexity;"
-                 "NetworkStats[miner,in,out];" << endl;
+    m_logfile << "Action"
+                 ";SectionID"
+                 ";ParentSectionID"
+                 ";Duration"
+                 ";Complexity"
+                 #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
+                 ";NetworkStats[miner,in,out]"
+                 #endif
+                 << endl;
 
     m_profilingActive = true;
     return true;
