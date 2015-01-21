@@ -217,7 +217,7 @@ public: /* Methods: */
     ExecutionProfiler(const LogHard::Logger & logger)
         : m_logger(logger, "[ExecutionProfiler]")
         , m_nextSectionTypeId(0)
-        , m_nextSectionId(0)
+        , m_nextSectionId(1)
         , m_profilingActive(false)
     {}
 
