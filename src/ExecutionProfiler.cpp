@@ -175,9 +175,8 @@ void ExecutionProfiler::__processLog() {
     m_logger.debug() << "Writing profiling log file '" << m_filename << "'";
 
     // Write all sections to the disc
-    while (m_sections.size() > 0) {
-        __processLog(1000u);
-    }
+    while (m_sections.size() > 0)
+        processLogStep();
 }
 
 void ExecutionProfiler::processLog(uint32_t timeLimitMs) {
@@ -191,27 +190,28 @@ void ExecutionProfiler::processLog(uint32_t timeLimitMs) {
 
 void ExecutionProfiler::__processLog(uint32_t timeLimitMs) {
     const UsTime end = getUsTime() + timeLimitMs * 1000u;
-
-    while (getUsTime() < end && m_sections.size() > 0u) {
-        ExecutionSection * const s = m_sections.front();
-
-        m_logfile << getSectionName(s) << ";"
-                  << s->sectionId << ";"
-                  << s->parentSectionId << ";"
-                  << (s->endTime - s->startTime) << ";"
-                  << s->complexityParameter
-                  #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
-                  << ";" << minerNetworkStatistics(
-                                s->startNetworkStatistics,
-                                s->endNetworkStatistics)
-                  #endif
-                  << endl;
-
-        delete s;
-        m_sections.pop_front();
-    }
-
+    while (getUsTime() < end && m_sections.size() > 0u)
+        processLogStep();
     m_logfile.flush();
+}
+
+void ExecutionProfiler::processLogStep() {
+    ExecutionSection * const s = m_sections.front();
+
+    m_logfile << getSectionName(s) << ";"
+              << s->sectionId << ";"
+              << s->parentSectionId << ";"
+              << (s->endTime - s->startTime) << ";"
+              << s->complexityParameter
+              #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
+              << ";" << minerNetworkStatistics(
+                            s->startNetworkStatistics,
+                            s->endNetworkStatistics)
+              #endif
+              << endl;
+
+    delete s;
+    m_sections.pop_front();
 }
 
 uint32_t ExecutionProfiler::newSectionType(const char * name) {

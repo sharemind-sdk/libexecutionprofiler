@@ -458,6 +458,7 @@ private: /* Methods: */
 
     void __processLog();
     void __processLog(uint32_t timeLimitMs);
+    void processLogStep();
 
     inline const char * getSectionName(ExecutionSection * s) const {
         if (s->m_nameCached) {
