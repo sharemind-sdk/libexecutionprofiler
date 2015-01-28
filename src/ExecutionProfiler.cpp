@@ -192,7 +192,6 @@ void ExecutionProfiler::__processLog(uint32_t timeLimitMs) {
     const UsTime end = getUsTime() + timeLimitMs * 1000u;
     while (getUsTime() < end && m_sections.size() > 0u)
         processLogStep();
-    m_logfile.flush();
 }
 
 void ExecutionProfiler::processLogStep() {
