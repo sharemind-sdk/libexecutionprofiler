@@ -361,19 +361,16 @@ public: /* Methods: */
     */
     void finishLog();
 
-    /**
-     Processes and writes all sections cached in memory to disk.
-
-     \param[in] timeLimitMs the number of milliseconds allowed for processing the sections.
-     If this is zero, no sections are processed.
-    */
+    /** \brief Processes and writes all sections cached in memory to disk. */
     void processLog();
 
     /**
-     Processes and writes sections cached in memory to disk for the given duration of time in ms.
+     \brief Processes and writes sections cached in memory to disk until the
+            given duration of time in ms has been exceeded.
 
-     \param[in] timeLimitMs the number of milliseconds allowed for processing the sections.
-     If this is zero, no sections are processed.
+     \param[in] timeLimitMs the number of milliseconds allowed for processing
+                            the sections. If this is zero, no sections are
+                            processed.
     */
     void processLog(uint32_t timeLimitMs);
 
