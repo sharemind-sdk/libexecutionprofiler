@@ -40,10 +40,11 @@ inline std::string minerNetworkStatistics(
         MNIT eit = endStats.find(sit->first);
         if (eit != endStats.end()) {
             /// \note The reported byte count can overflow.
-            o << "[" << sit->first
+            o << (sit == startStats.begin() ? "" : ",")
+              << "[" << sit->first
               << "," << (eit->second.receivedBytes - sit->second.receivedBytes)
               << "," << (eit->second.sentBytes - sit->second.sentBytes)
-              << "] ";
+              << "]";
         } else {
             return "";
         }
