@@ -308,7 +308,7 @@ public: /* Methods: */
                           const MinerNetworkStatistics & startNetStats,
                           uint32_t parentSectionId = 0)
     {
-        return startSection__<T>(std::move(sectionTypeName),
+        return startSection_<T>(std::move(sectionTypeName),
                                  complexityParameter,
                                  startNetStats,
                                  parentSectionId);
@@ -320,7 +320,7 @@ public: /* Methods: */
                           size_t complexityParameter,
                           uint32_t parentSectionId = 0)
     {
-        return startSection__<T>(
+        return startSection_<T>(
                     sectionTypeName,
                     complexityParameter,
                     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
@@ -413,7 +413,7 @@ private: /* Methods: */
      \returns an unique identifier for the profiled code section which should be passed to EndSection later on
     */
     template<class T>
-    uint32_t startSection__(
+    uint32_t startSection_(
             T sectionTypeName,
             size_t complexityParameter,
             #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
@@ -453,8 +453,8 @@ private: /* Methods: */
         return s->sectionId;
     }
 
-    void __processLog();
-    void __processLog(uint32_t timeLimitMs);
+    void _processLog();
+    void _processLog(uint32_t timeLimitMs);
     void processLogStep();
 
     inline const char * getSectionName(ExecutionSection * s) const {
