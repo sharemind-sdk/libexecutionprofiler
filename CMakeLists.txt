@@ -20,10 +20,14 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(SharemindLibExecutionProfiler CXX)
 
+SET(CPACK_PACKAGE_VERSION_MAJOR "0")
+SET(CPACK_PACKAGE_VERSION_MINOR "1")
+SET(CPACK_PACKAGE_VERSION_PATCH "0")
+SET(LIBEXECUTIONPROFILER_VERSION
+    "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+
 INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/config.local" OPTIONAL)
 INCLUDE("${CMAKE_CURRENT_BINARY_DIR}/config.local" OPTIONAL)
-
-SET(LIBEXECUTIONPROFILER_VERSION "0.1.0")
 
 SET(Boost_USE_STATIC_RUNTIME OFF)
 FIND_PACKAGE(LogHard REQUIRED)
@@ -86,9 +90,11 @@ SET_TARGET_PROPERTIES("libexecutionprofiler" PROPERTIES
                       SOVERSION "0.1")
 TARGET_LINK_LIBRARIES("libexecutionprofiler"
                       ${LIBEXECUTIONPROFILER_EXTERNAL_LINK_LIBRARIES})
-INSTALL(TARGETS "libexecutionprofiler" LIBRARY DESTINATION "lib")
+INSTALL(TARGETS "libexecutionprofiler" LIBRARY DESTINATION "lib" COMPONENT lib)
 
-INSTALL(FILES ${LIBEXECUTIONPROFILER_HEADERS} DESTINATION "include/sharemind")
+INSTALL(FILES ${LIBEXECUTIONPROFILER_HEADERS}
+        DESTINATION "include/sharemind"
+        COMPONENT dev)
 
 FILE(GLOB_RECURSE LIBEXECUTIONPROFILER_INFILES
      "${CMAKE_CURRENT_SOURCE_DIR}/*.in")
@@ -101,12 +107,36 @@ CONFIGURE_FILE(
   @ONLY)
 INSTALL(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/SharemindLibExecutionProfilerConfig.cmake"
-  DESTINATION "lib/SharemindLibExecutionProfiler")
+  DESTINATION "lib/SharemindLibExecutionProfiler"
+  COMPONENT dev)
 CONFIGURE_FILE(
   "${CMAKE_CURRENT_SOURCE_DIR}/SharemindLibExecutionProfilerConfigVersion.cmake.in"
   "${CMAKE_CURRENT_BINARY_DIR}/SharemindLibExecutionProfilerConfigVersion.cmake"
   @ONLY)
 INSTALL(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/SharemindLibExecutionProfilerConfigVersion.cmake"
-  DESTINATION "lib/SharemindLibExecutionProfiler")
+  DESTINATION "lib/SharemindLibExecutionProfiler"
+  COMPONENT dev)
 
+
+# Packaging:
+SET(CPACK_PACKAGE_VENDOR "Cybernetica AS")
+SET(CPACK_PACKAGE_CONTACT "Sharemind packaging <sharemind-packaging@cyber.ee>")
+SET(CPACK_GENERATOR "DEB")
+SET(CPACK_DEBIAN_PACKAGE_NAME "libsharemind-executionprofiler")
+SET(CPACK_DEBIAN_PACKAGE_RELEASE "cyber1")
+SET(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
+SET(CPACK_DEB_COMPONENT_INSTALL "ON")
+SET(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
+
+SET(CPACK_DEBIAN_LIB_PACKAGE_NAME "libsharemind-executionprofiler")
+SET(CPACK_COMPONENT_DEV_DESCRIPTION "Sharemind Execution Profiler library development headers")
+SET(CPACK_COMPONENT_LIB_DESCRIPTION "Sharemind Execution Profiler library")
+SET(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS
+    "libsharemind-executionprofiler (= ${LIBEXECUTIONPROFILER_VERSION}), libloghard-dev (>= 0.1.0), libsharemind-cxxheaders-dev (>= 0.1.0), libstdc++-dev")
+SET(CPACK_DEBIAN_LIB_PACKAGE_DEPENDS
+    "libloghard (>= 0.1.0), libstdc++6 (>= 4.8.0)")
+SET(CPACK_DEBIAN_DEV_PACKAGE_SECTION "libdevel")
+SET(CPACK_DEBIAN_LIB_PACKAGE_SECTION "libs")
+SET(CPACK_DEBIAN_DEV_PACKAGE_ARCHITECTURE "any")
+INCLUDE(CPack)
