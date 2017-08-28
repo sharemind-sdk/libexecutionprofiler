@@ -17,127 +17,102 @@
 # For further information, please contact us at sharemind@cyber.ee.
 #
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-PROJECT(SharemindLibExecutionProfiler CXX)
-
-SET(CPACK_PACKAGE_VERSION_MAJOR "0")
-SET(CPACK_PACKAGE_VERSION_MINOR "1")
-SET(CPACK_PACKAGE_VERSION_PATCH "0")
-SET(LIBEXECUTIONPROFILER_SOVERSION
-    "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}")
-SET(LIBEXECUTIONPROFILER_VERSION
-    "${LIBEXECUTIONPROFILER_SOVERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+PROJECT(SharemindLibExecutionProfiler VERSION 0.1.0 LANGUAGES CXX)
 
 INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/config.local" OPTIONAL)
 INCLUDE("${CMAKE_CURRENT_BINARY_DIR}/config.local" OPTIONAL)
+
+FIND_PACKAGE(SharemindCMakeHelpers REQUIRED)
+
+SharemindSetProjectVersion()
 
 SET(Boost_USE_STATIC_RUNTIME OFF)
 FIND_PACKAGE(LogHard REQUIRED)
 FIND_PACKAGE(SharemindCxxHeaders REQUIRED)
 
-SET(LIBEXECUTIONPROFILER_EXTERNAL_LINK_LIBRARIES "")
-LIST(APPEND LIBEXECUTIONPROFILER_EXTERNAL_LINK_LIBRARIES
-    ${SharemindCxxHeaders_LIBRARIES}
-    ${LogHard_LIBRARIES}
-)
-SET(LIBEXECUTIONPROFILER_EXTERNAL_INCLUDE_DIRS "")
-LIST(APPEND LIBEXECUTIONPROFILER_EXTERNAL_INCLUDE_DIRS
-    ${SharemindCxxHeaders_INCLUDE_DIRS}
-    ${LogHard_INCLUDE_DIRS}
-)
-SET(LIBEXECUTIONPROFILER_EXTERNAL_DEFINITIONS "")
-LIST(APPEND LIBEXECUTIONPROFILER_EXTERNAL_DEFINITIONS
-    ${SharemindCxxHeaders_DEFINITIONS}
-    ${LogHard_DEFINITIONS}
-)
-LIST(REMOVE_DUPLICATES LIBEXECUTIONPROFILER_EXTERNAL_LINK_LIBRARIES)
-LIST(REMOVE_DUPLICATES LIBEXECUTIONPROFILER_EXTERNAL_INCLUDE_DIRS)
-LIST(REMOVE_DUPLICATES LIBEXECUTIONPROFILER_EXTERNAL_DEFINITIONS)
-
-
-SET(LIBEXECUTIONPROFILER_INSTALL_LINK_LIBRARIES
-    ${LIBEXECUTIONPROFILER_EXTERNAL_LINK_LIBRARIES}
-    "-L${CMAKE_INSTALL_PREFIX}/lib" "-lsharemind_executionprofiler")
-SET(LIBEXECUTIONPROFILER_INSTALL_INCLUDE_DIRS
-    "${CMAKE_INSTALL_PREFIX}/include"
-    ${LIBEXECUTIONPROFILER_EXTERNAL_INCLUDE_DIRS})
-SET(LIBEXECUTIONPROFILER_INSTALL_DEFINITIONS
-    ${LIBEXECUTIONPROFILER_EXTERNAL_DEFINITIONS})
-LIST(REMOVE_DUPLICATES LIBEXECUTIONPROFILER_INSTALL_INCLUDE_DIRS)
-
-INCLUDE_DIRECTORIES(${LIBEXECUTIONPROFILER_EXTERNAL_INCLUDE_DIRS})
-ADD_DEFINITIONS(${LIBEXECUTIONPROFILER_EXTERNAL_DEFINITIONS})
-ADD_COMPILE_OPTIONS(
-  "-std=c++11" "-Wall" "-Wextra" "-O2" "-fPIC"
-  "$<$<NOT:$<STREQUAL:$<CONFIGURATION>,Release>>:-ggdb>"
-  "$<$<NOT:$<STREQUAL:$<CONFIGURATION>,Release>>:-fno-omit-frame-pointer>"
-  "$<$<STREQUAL:$<CONFIGURATION>,Release>:-DNDEBUG>"
-  "$<$<STREQUAL:$<CONFIGURATION>,Release>:-fomit-frame-pointer>"
-)
-
-# For enabling network statistics in the profiling results
-IF(SHAREMIND_NETWORK_STATISTICS)
-    ADD_DEFINITIONS("-DSHAREMIND_NETWORK_STATISTICS_ENABLE")
-ENDIF(SHAREMIND_NETWORK_STATISTICS)
-
-FILE(GLOB_RECURSE LIBEXECUTIONPROFILER_SOURCES
-     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-FILE(GLOB_RECURSE LIBEXECUTIONPROFILER_HEADERS
+# Headers:
+FILE(GLOB_RECURSE SharemindLibExecutionProfiler_HEADERS
      "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
-ADD_LIBRARY("libexecutionprofiler" SHARED ${LIBEXECUTIONPROFILER_SOURCES}
-                                          ${LIBEXECUTIONPROFILER_HEADERS})
-SET_TARGET_PROPERTIES("libexecutionprofiler" PROPERTIES
-                      OUTPUT_NAME "sharemind_executionprofiler"
-                      VERSION "${LIBEXECUTIONPROFILER_VERSION}"
-                      SOVERSION "${LIBEXECUTIONPROFILER_SOVERSION}")
-TARGET_LINK_LIBRARIES("libexecutionprofiler"
-                      ${LIBEXECUTIONPROFILER_EXTERNAL_LINK_LIBRARIES})
-INSTALL(TARGETS "libexecutionprofiler" LIBRARY DESTINATION "lib" COMPONENT lib)
-
-INSTALL(FILES ${LIBEXECUTIONPROFILER_HEADERS}
+INSTALL(FILES ${SharemindLibExecutionProfiler_HEADERS}
         DESTINATION "include/sharemind"
         COMPONENT dev)
 
-FILE(GLOB_RECURSE LIBEXECUTIONPROFILER_INFILES
-     "${CMAKE_CURRENT_SOURCE_DIR}/*.in")
-ADD_CUSTOM_TARGET("include_LIBEXECUTIONPROFILER_INFILES_in_IDE"
-                  SOURCES ${LIBEXECUTIONPROFILER_INFILES})
+# The library:
+SharemindSetCxx11CompileOptions()
+SharemindNewUniqueList(SharemindLibExecutionProfiler_LINK_LIBRARIES
+    ${SharemindCxxHeaders_LIBRARIES}
+    ${LogHard_LIBRARIES}
+)
+SharemindNewUniqueList(SharemindLibExecutionProfiler_INCLUDE_DIRS
+    ${SharemindCxxHeaders_INCLUDE_DIRS}
+    ${LogHard_INCLUDE_DIRS}
+)
+SharemindNewUniqueList(SharemindLibExecutionProfiler_DEFINITIONS
+    ${SharemindCxxHeaders_DEFINITIONS}
+    ${LogHard_DEFINITIONS}
+)
+IF(SHAREMIND_NETWORK_STATISTICS)
+    SharemindListAppendUnique(SharemindLibExecutionProfiler_DEFINITIONS
+        "-DSHAREMIND_NETWORK_STATISTICS_ENABLE"
+    )
+ENDIF(SHAREMIND_NETWORK_STATISTICS)
 
-CONFIGURE_FILE(
-  "${CMAKE_CURRENT_SOURCE_DIR}/SharemindLibExecutionProfilerConfig.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/SharemindLibExecutionProfilerConfig.cmake"
-  @ONLY)
-INSTALL(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/SharemindLibExecutionProfilerConfig.cmake"
-  DESTINATION "lib/SharemindLibExecutionProfiler"
-  COMPONENT dev)
-CONFIGURE_FILE(
-  "${CMAKE_CURRENT_SOURCE_DIR}/SharemindLibExecutionProfilerConfigVersion.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/SharemindLibExecutionProfilerConfigVersion.cmake"
-  @ONLY)
-INSTALL(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/SharemindLibExecutionProfilerConfigVersion.cmake"
-  DESTINATION "lib/SharemindLibExecutionProfiler"
-  COMPONENT dev)
+FILE(GLOB_RECURSE SharemindLibExecutionProfiler_SOURCES
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+SharemindAddSharedLibrary("libexecutionprofiler"
+    OUTPUT_NAME "sharemind_executionprofiler"
+    SOURCES
+        ${SharemindLibExecutionProfiler_SOURCES}
+        ${SharemindLibExecutionProfiler_HEADERS}
+    INCLUDE_DIRECTORIES
+        ${SharemindLibExecutionProfiler_INCLUDE_DIRS}
+    LEGACY_DEFINITIONS
+        ${SharemindLibExecutionProfiler_DEFINITIONS}
+    LINK_LIBRARIES
+        ${SharemindLibExecutionProfiler_LINK_LIBRARIES}
+)
+
+# Install CMake files:
+SharemindNewUniqueList(SharemindLibExecutionProfiler_INSTALL_LINK_LIBRARIES
+    ${SharemindLibExecutionProfiler_LINK_LIBRARIES}
+    "-L${CMAKE_INSTALL_PREFIX}/lib" "-lsharemind_executionprofiler"
+)
+SharemindNewUniqueList(SharemindLibExecutionProfiler_INSTALL_INCLUDE_DIRS
+    "${CMAKE_INSTALL_PREFIX}/include"
+    ${SharemindLibExecutionProfiler_INCLUDE_DIRS}
+)
+SharemindNewUniqueList(SharemindLibExecutionProfiler_INSTALL_DEFINITIONS
+    ${SharemindLibExecutionProfiler_DEFINITIONS}
+)
+SharemindUseCMakeFindFiles()
 
 
 # Packaging:
-SET(CPACK_PACKAGE_VENDOR "Cybernetica AS")
-SET(CPACK_PACKAGE_CONTACT "Sharemind packaging <sharemind-packaging@cyber.ee>")
-SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_NAME "libsharemind-executionprofiler")
-SET(CPACK_DEBIAN_PACKAGE_RELEASE "cyber1")
-SET(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
-SET(CPACK_DEB_COMPONENT_INSTALL "ON")
-SET(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
-
-SET(CPACK_DEBIAN_LIB_PACKAGE_NAME "libsharemind-executionprofiler")
-SET(CPACK_COMPONENT_DEV_DESCRIPTION "Sharemind Execution Profiler library development headers")
-SET(CPACK_COMPONENT_LIB_DESCRIPTION "Sharemind Execution Profiler library")
-SET(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS
-    "libsharemind-executionprofiler (= ${LIBEXECUTIONPROFILER_VERSION}), libloghard-dev (>= 0.1.0), libsharemind-cxxheaders-dev (>= 0.1.0), libstdc++-dev")
-SET(CPACK_DEBIAN_LIB_PACKAGE_DEPENDS
-    "libloghard (>= 0.1.0), libstdc++6 (>= 4.8.0)")
-SET(CPACK_DEBIAN_DEV_PACKAGE_SECTION "libdevel")
-SET(CPACK_DEBIAN_LIB_PACKAGE_SECTION "libs")
-INCLUDE(CPack)
+SharemindSetupPackaging()
+SharemindAddComponentPackage("lib"
+    NAME "libsharemind-executionprofiler"
+    DESCRIPTION "Sharemind Execution Profiler library"
+    DEB_SECTION "libs"
+    DEB_DEPENDS
+        "libloghard (>= 0.1.0)"
+        "libstdc++6 (>= 4.8.0)"
+)
+SharemindAddComponentPackage("dev"
+    NAME "libsharemind-executionprofiler-dev"
+    DESCRIPTION "Sharemind Execution Profiler library development headers"
+    DEB_SECTION "libdevel"
+    DEB_DEPENDS
+        "libsharemind-executionprofiler (= ${SharemindLibExecutionProfiler_VERSION})"
+        "libloghard-dev (>= 0.1.0)"
+        "libsharemind-cxxheaders-dev (>= 0.1.0)"
+        "libstdc++-dev"
+)
+SharemindAddComponentPackage("debug"
+    NAME "libsharemind-executionprofiler-dbg"
+    DESCRIPTION "Sharemind Execution Profiler library debug symbols"
+    DEB_SECTION "debug"
+    DEB_DEPENDS
+        "libsharemind-executionprofiler (= ${SharemindLibExecutionProfiler_VERSION})"
+)
+SharemindPackagingFinalize()

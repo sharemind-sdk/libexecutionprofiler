@@ -23,6 +23,6 @@
 #   SharemindLibExecutionProfiler_DEFINITIONS  - required compiler definitions
 
 
-SET(SharemindLibExecutionProfiler_INCLUDE_DIRS @LIBEXECUTIONPROFILER_INSTALL_INCLUDE_DIRS@)
-SET(SharemindLibExecutionProfiler_LIBRARIES @LIBEXECUTIONPROFILER_INSTALL_LINK_LIBRARIES@)
-SET(SharemindLibExecutionProfiler_DEFINITIONS @LIBEXECUTIONPROFILER_INSTALL_DEFINITIONS@)
+SET(SharemindLibExecutionProfiler_INCLUDE_DIRS @SharemindLibExecutionProfiler_INSTALL_INCLUDE_DIRS@)
+SET(SharemindLibExecutionProfiler_LIBRARIES @SharemindLibExecutionProfiler_INSTALL_LINK_LIBRARIES@)
+SET(SharemindLibExecutionProfiler_DEFINITIONS @SharemindLibExecutionProfiler_INSTALL_DEFINITIONS@)
