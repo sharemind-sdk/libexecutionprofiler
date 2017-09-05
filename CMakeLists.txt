@@ -74,18 +74,17 @@ SharemindAddSharedLibrary("libexecutionprofiler"
 )
 
 # Install CMake files:
-SharemindNewUniqueList(SharemindLibExecutionProfiler_INSTALL_LINK_LIBRARIES
-    ${SharemindLibExecutionProfiler_LINK_LIBRARIES}
-    "-L${CMAKE_INSTALL_PREFIX}/lib" "-lsharemind_executionprofiler"
+SharemindCreateCMakeFindFiles(
+    INCLUDE_DIRS
+        "${CMAKE_INSTALL_PREFIX}/include"
+        ${SharemindLibExecutionProfiler_INCLUDE_DIRS}
+    DEFINITIONS
+        ${SharemindLibExecutionProfiler_DEFINITIONS}
+    LIBRARIES
+        ${SharemindLibExecutionProfiler_LINK_LIBRARIES}
+        "-L${CMAKE_INSTALL_PREFIX}/lib"
+        "-lsharemind_executionprofiler"
 )
-SharemindNewUniqueList(SharemindLibExecutionProfiler_INSTALL_INCLUDE_DIRS
-    "${CMAKE_INSTALL_PREFIX}/include"
-    ${SharemindLibExecutionProfiler_INCLUDE_DIRS}
-)
-SharemindNewUniqueList(SharemindLibExecutionProfiler_INSTALL_DEFINITIONS
-    ${SharemindLibExecutionProfiler_DEFINITIONS}
-)
-SharemindUseCMakeFindFiles()
 
 
 # Packaging:
