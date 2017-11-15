@@ -230,8 +230,7 @@ public: /* Methods: */
 
      \param[in] filename the name of the file to log the sections to
 
-     \retval true if opening the file was successful
-     \retval false if opening the file failed
+     \returns whether opening the file was successful
     */
     bool startLog(const std::string &filename);
 
