@@ -125,7 +125,11 @@ bool ExecutionProfiler::startLog(const string & filename) {
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
     // Try to open the log file
-    m_logfile.open(m_filename.c_str());
+    // Note: the file is truncated so that when a script does not have
+    // profiling sections, the old results are not left into the profile log.
+    m_logfile.open(m_filename.c_str(),
+            std::ios_base::out | std::ios_base::trunc);
+
     if (m_logfile.bad() || m_logfile.fail()) {
         m_logger.error() << "Can not open profiler log file '" << m_filename
                          << "'!";
