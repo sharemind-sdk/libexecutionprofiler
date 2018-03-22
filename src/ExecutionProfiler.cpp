@@ -67,21 +67,21 @@ namespace sharemind {
 
 ExecutionSection::ExecutionSection(
         const char * sectionName,
-        uint32_t sectionId,
-        uint32_t parentSectionId,
-        UsTime startTime,
-        UsTime endTime,
-        size_t complexityParameter
+        uint32_t sectionId_,
+        uint32_t parentSectionId_,
+        UsTime startTime_,
+        UsTime endTime_,
+        size_t complexityParameter_
         #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
         , const MinerNetworkStatistics & startNetStats
         , const MinerNetworkStatistics & endNetStats
         #endif
         )
-    : sectionId(sectionId)
-    , parentSectionId(parentSectionId)
-    , startTime(startTime)
-    , endTime(endTime)
-    , complexityParameter(complexityParameter)
+    : sectionId(sectionId_)
+    , parentSectionId(parentSectionId_)
+    , startTime(startTime_)
+    , endTime(endTime_)
+    , complexityParameter(complexityParameter_)
     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
     , startNetworkStatistics(startNetStats)
     , endNetworkStatistics(endNetStats)
@@ -93,21 +93,21 @@ ExecutionSection::ExecutionSection(
 
 ExecutionSection::ExecutionSection(
         uint32_t sectionType,
-        uint32_t sectionId,
-        uint32_t parentSectionId,
-        UsTime startTime,
-        UsTime endTime,
-        size_t complexityParameter
+        uint32_t sectionId_,
+        uint32_t parentSectionId_,
+        UsTime startTime_,
+        UsTime endTime_,
+        size_t complexityParameter_
         #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
         , const MinerNetworkStatistics & startNetStats
         , const MinerNetworkStatistics & endNetStats
         #endif
         )
-    : sectionId(sectionId)
-    , parentSectionId(parentSectionId)
-    , startTime(startTime)
-    , endTime(endTime)
-    , complexityParameter(complexityParameter)
+    : sectionId(sectionId_)
+    , parentSectionId(parentSectionId_)
+    , startTime(startTime_)
+    , endTime(endTime_)
+    , complexityParameter(complexityParameter_)
     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
     , startNetworkStatistics(startNetStats)
     , endNetworkStatistics(endNetStats)
