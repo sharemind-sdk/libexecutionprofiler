@@ -28,7 +28,7 @@ FIND_PACKAGE(SharemindCMakeHelpers REQUIRED)
 SharemindSetProjectVersion()
 
 SET(Boost_USE_STATIC_RUNTIME OFF)
-FIND_PACKAGE(LogHard REQUIRED)
+FIND_PACKAGE(LogHard 0.3.0 REQUIRED)
 FIND_PACKAGE(SharemindCxxHeaders REQUIRED)
 
 # Headers:
@@ -94,7 +94,7 @@ SharemindAddComponentPackage("lib"
     DESCRIPTION "Sharemind Execution Profiler library"
     DEB_SECTION "libs"
     DEB_DEPENDS
-        "libloghard (>= 0.1.0)"
+        "libloghard (>= 0.3.0)"
         "libstdc++6 (>= 4.8.0)"
 )
 SharemindAddComponentPackage("dev"
@@ -103,7 +103,7 @@ SharemindAddComponentPackage("dev"
     DEB_SECTION "libdevel"
     DEB_DEPENDS
         "libsharemind-executionprofiler (= ${SharemindLibExecutionProfiler_VERSION})"
-        "libloghard-dev (>= 0.1.0)"
+        "libloghard-dev (>= 0.3.0)"
         "libsharemind-cxxheaders-dev (>= 0.1.0)"
         "libstdc++-dev"
 )
