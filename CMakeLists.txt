@@ -102,7 +102,7 @@ SharemindAddComponentPackage("dev"
     DESCRIPTION "Sharemind Execution Profiler library development headers"
     DEB_SECTION "libdevel"
     DEB_DEPENDS
-        "libsharemind-executionprofiler (= ${SharemindLibExecutionProfiler_VERSION})"
+        "libsharemind-executionprofiler (= ${SharemindLibExecutionProfiler_DEB_lib_PACKAGE_VERSION})"
         "libloghard-dev (>= 0.3.0)"
         "libsharemind-cxxheaders-dev (>= 0.1.0)"
         "libstdc++-dev"
@@ -112,6 +112,6 @@ SharemindAddComponentPackage("debug"
     DESCRIPTION "Sharemind Execution Profiler library debug symbols"
     DEB_SECTION "debug"
     DEB_DEPENDS
-        "libsharemind-executionprofiler (= ${SharemindLibExecutionProfiler_VERSION})"
+        "libsharemind-executionprofiler (= ${SharemindLibExecutionProfiler_DEB_lib_PACKAGE_VERSION})"
 )
 SharemindPackagingFinalize()
