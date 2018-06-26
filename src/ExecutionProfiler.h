@@ -22,12 +22,13 @@
 
 #include <deque>
 #include <fstream>
-#include <iostream>
 #include <LogHard/Logger.h>
 #include <map>
 #include <mutex>
 #include <sharemind/MicrosecondTime.h>
 #include <stack>
+#include <string>
+#include <utility>
 
 
 namespace sharemind {
