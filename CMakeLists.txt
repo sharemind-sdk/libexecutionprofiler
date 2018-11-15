@@ -37,7 +37,7 @@ INSTALL(FILES ${SharemindLibExecutionProfiler_HEADERS}
         COMPONENT dev)
 
 # The library:
-SharemindSetCxx11CompileOptions()
+SharemindSetCxx14CompileOptions()
 SharemindNewUniqueList(SharemindLibExecutionProfiler_LINK_LIBRARIES
     ${SharemindCxxHeaders_LIBRARIES}
     ${LogHard_LIBRARIES}
