@@ -453,8 +453,8 @@ private: /* Methods: */
         return s->sectionId;
     }
 
-    void _processLog();
-    void _processLog(uint32_t timeLimitMs);
+    void processLog_();
+    void processLog_(uint32_t timeLimitMs);
     void processLogStep();
 
     inline const char * getSectionName(ExecutionSection * s) const {

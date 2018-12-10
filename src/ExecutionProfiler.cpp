@@ -157,7 +157,7 @@ void ExecutionProfiler::finishLog() {
 
     // Lock the list
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
-    _processLog();
+    processLog_();
 
     // Close the log file, if necessary
     if (m_logfile.is_open()) {
@@ -173,10 +173,10 @@ void ExecutionProfiler::processLog() {
         return;
 
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
-    _processLog();
+    processLog_();
 }
 
-void ExecutionProfiler::_processLog() {
+void ExecutionProfiler::processLog_() {
     m_logger.debug() << "Writing profiling log file '" << m_filename << "'";
 
     // Write all sections to the disc
@@ -190,10 +190,10 @@ void ExecutionProfiler::processLog(uint32_t timeLimitMs) {
 
     // Lock the list
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
-    _processLog(timeLimitMs);
+    processLog_(timeLimitMs);
 }
 
-void ExecutionProfiler::_processLog(uint32_t timeLimitMs) {
+void ExecutionProfiler::processLog_(uint32_t timeLimitMs) {
     const UsTime end = getUsTime() + timeLimitMs * 1000u;
     while (getUsTime() < end && m_sections.size() > 0u)
         processLogStep();
