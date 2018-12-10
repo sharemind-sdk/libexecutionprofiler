@@ -20,6 +20,8 @@
 #ifndef SHAREMIND_EXECUTIONPROFILER_H
 #define SHAREMIND_EXECUTIONPROFILER_H
 
+#include <cstddef>
+#include <cstdint>
 #include <deque>
 #include <fstream>
 #include <LogHard/Logger.h>
@@ -42,7 +44,7 @@ class ExecutionProfiler;
 /* common profiling defines */
 #if defined(PROFILE_MINER) || defined(PROFILE_SECREC) || defined(PROFILE_VM)
     #define START_SECTION(profiler, sid, name, T, parameter)\
-        uint32_t (sid) = (profiler).startSection<T> ((name), (parameter));
+        std::uint32_t (sid) = (profiler).startSection<T> ((name), (parameter));
     #define END_SECTION(profiler, sid)\
         (profiler).endSection((sid));
     #define SCOPED_SECTION(profiler, sid, name, T, parameter)\
@@ -80,11 +82,11 @@ class ExecutionProfiler;
 /* SecreC specific profiling defines */
 #ifdef PROFILE_SECREC
     #define START_SECTION_SECREC(profiler, sid, type, parameter)\
-        START_SECTION((profiler), (sid), (type), uint32_t, (parameter))
+        START_SECTION((profiler), (sid), (type), std::uint32_t, (parameter))
     #define END_SECTION_SECREC(profiler, sid)\
         END_SECTION((profiler), (sid))
     #define SCOPED_SECTION_SECREC(profiler, sid, name, parameter)\
-        SCOPED_SECTION((profiler), sid, (name), uint32_t, (parameter))
+        SCOPED_SECTION((profiler), sid, (name), std::uint32_t, (parameter))
 #else
     #define START_SECTION_SECREC(profiler, sid, type, parameter)
     #define END_SECTION_SECREC(profiler, sid)
@@ -107,11 +109,11 @@ class ExecutionProfiler;
 
 #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
 struct NetworkStats {
-    uint64_t receivedBytes;
-    uint64_t sentBytes;
+    std::uint64_t receivedBytes;
+    std::uint64_t sentBytes;
 };
 
-typedef std::map<size_t, NetworkStats> MinerNetworkStatistics;
+typedef std::map<std::size_t, NetworkStats> MinerNetworkStatistics;
 #endif
 
 /**
@@ -127,10 +129,10 @@ public: /* Types: */
 
     union SectionName {
         const char * namePtr;
-        uint32_t nameCacheId;
+        std::uint32_t nameCacheId;
 
         SectionName(const char * name) : namePtr(name) {}
-        SectionName(uint32_t cacheid) : nameCacheId(cacheid) {}
+        SectionName(std::uint32_t cacheid) : nameCacheId(cacheid) {}
     };
 
 public:
@@ -143,23 +145,23 @@ public:
      \param[in] parentSectionId the identifier of a section which contains this one
     */
     ExecutionSection(const char * sectionName,
-                     uint32_t sectionId,
-                     uint32_t parentSectionId,
+                     std::uint32_t sectionId,
+                     std::uint32_t parentSectionId,
                      UsTime startTime,
                      UsTime endTime,
-                     size_t complexityParameter
+                     std::size_t complexityParameter
                      #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                      , const MinerNetworkStatistics & startNetStats
                      , const MinerNetworkStatistics & endNetStats
                      #endif
                      );
 
-    ExecutionSection(uint32_t sectionType,
-                     uint32_t sectionId,
-                     uint32_t parentSectionId,
+    ExecutionSection(std::uint32_t sectionType,
+                     std::uint32_t sectionId,
+                     std::uint32_t parentSectionId,
                      UsTime startTime,
                      UsTime endTime,
-                     size_t complexityParameter
+                     std::size_t complexityParameter
                      #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                      , const MinerNetworkStatistics & startNetStats
                      , const MinerNetworkStatistics & endNetStats
@@ -167,10 +169,10 @@ public:
                      );
 
     /** The identifier of this section */
-    uint32_t sectionId;
+    std::uint32_t sectionId;
 
     /** The identifier of the parent section containing this one (zero, if none) */
-    uint32_t parentSectionId;
+    std::uint32_t parentSectionId;
 
     /** A timestamp for the moment the section started */
     UsTime startTime;
@@ -179,7 +181,7 @@ public:
     UsTime endTime;
 
     /** The O(n) complexity parameter for the section */
-    size_t complexityParameter;
+    std::size_t complexityParameter;
 
     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
     /**
@@ -244,18 +246,18 @@ public: /* Methods: */
      \param[in] name the name of section type, that will be used in the logging output to identify the type of section being logged.
      \returns a unique identifier for the new section type.
     */
-    uint32_t newSectionType(const char *name);
+    std::uint32_t newSectionType(const char *name);
 
     template<class T>
-    uint32_t addSection(T sectionTypeName,
-                        size_t complexityParameter,
-                        UsTime startTime,
-                        UsTime endTime,
-                        #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
-                        const MinerNetworkStatistics & startNetStats,
-                        const MinerNetworkStatistics & endNetStats,
-                        #endif
-                        uint32_t parentSectionId = 0)
+    std::uint32_t addSection(T sectionTypeName,
+                             std::size_t complexityParameter,
+                             UsTime startTime,
+                             UsTime endTime,
+                             #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
+                             const MinerNetworkStatistics & startNetStats,
+                             const MinerNetworkStatistics & endNetStats,
+                             #endif
+                             std::uint32_t parentSectionId = 0)
     {
         if (!m_profilingActive)
             return 0;
@@ -264,10 +266,10 @@ public: /* Methods: */
         std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
         // Automatically set parent
-        const uint32_t usedParentSectionId = parentSectionId == 0
-                                             && !m_parentSectionStack.empty()
-                                             ? m_parentSectionStack.top()
-                                             : parentSectionId;
+        std::uint32_t const usedParentSectionId =
+                parentSectionId == 0 && !m_parentSectionStack.empty()
+                ? m_parentSectionStack.top()
+                : parentSectionId;
 
         // Create the entry and store it
         ExecutionSection * const s = new ExecutionSection(
@@ -303,10 +305,10 @@ public: /* Methods: */
      \returns an unique identifier for the profiled code section which should be passed to EndSection later on
     */
     template<class T>
-    uint32_t startSection(T sectionTypeName,
-                          size_t complexityParameter,
-                          const MinerNetworkStatistics & startNetStats,
-                          uint32_t parentSectionId = 0)
+    std::uint32_t startSection(T sectionTypeName,
+                               std::size_t complexityParameter,
+                               const MinerNetworkStatistics & startNetStats,
+                               std::uint32_t parentSectionId = 0)
     {
         return startSection_<T>(std::move(sectionTypeName),
                                  complexityParameter,
@@ -316,9 +318,9 @@ public: /* Methods: */
     #endif
 
     template<class T>
-    uint32_t startSection(T sectionTypeName,
-                          size_t complexityParameter,
-                          uint32_t parentSectionId = 0)
+    std::uint32_t startSection(T sectionTypeName,
+                               std::size_t complexityParameter,
+                               std::uint32_t parentSectionId = 0)
     {
         return startSection_<T>(
                     sectionTypeName,
@@ -337,7 +339,7 @@ public: /* Methods: */
 
      \param[in] sectionId the id returned by StartSection. If no such section has been started, the method does nothing.
     */
-    void endSection(uint32_t sectionId);
+    void endSection(std::uint32_t sectionId);
 
     /**
      Completes the specified section.
@@ -349,7 +351,7 @@ public: /* Methods: */
      \param[in] endTime the end time to be stored in the section specified by sectionId.
      \param[in] endNetStats the network statistics measured in the end of the section.
     */
-    void endSection(uint32_t sectionId,
+    void endSection(std::uint32_t sectionId,
                     const UsTime endTime
                     #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
                     , const MinerNetworkStatistics & endNetStats
@@ -372,7 +374,7 @@ public: /* Methods: */
                             the sections. If this is zero, no sections are
                             processed.
     */
-    void processLog(uint32_t timeLimitMs);
+    void processLog(std::uint32_t timeLimitMs);
 
     /**
      Specifies a default parent section for subsequent sections.
@@ -387,7 +389,7 @@ public: /* Methods: */
 
      \param[in] sectionId the id of the section to be used as a parent for subsequent sections
     */
-    void pushParentSection(uint32_t sectionId);
+    void pushParentSection(std::uint32_t sectionId);
 
     /**
      Pops a parent section identifier from the stack.
@@ -413,13 +415,13 @@ private: /* Methods: */
      \returns an unique identifier for the profiled code section which should be passed to EndSection later on
     */
     template<class T>
-    uint32_t startSection_(
+    std::uint32_t startSection_(
             T sectionTypeName,
-            size_t complexityParameter,
+            std::size_t complexityParameter,
             #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
             const MinerNetworkStatistics & startNetStats,
             #endif
-            uint32_t parentSectionId = 0)
+            std::uint32_t parentSectionId = 0)
     {
         if (!m_profilingActive)
             return 0;
@@ -428,10 +430,10 @@ private: /* Methods: */
         std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
         // Automatically set parent
-        const uint32_t usedParentSectionId = parentSectionId == 0
-                                             && !m_parentSectionStack.empty()
-                                             ? m_parentSectionStack.top()
-                                             : parentSectionId;
+        std::uint32_t const usedParentSectionId =
+                parentSectionId == 0 && !m_parentSectionStack.empty()
+                ? m_parentSectionStack.top()
+                : parentSectionId;
 
         // Create the entry and store it
         ExecutionSection * const s = new ExecutionSection(
@@ -454,12 +456,12 @@ private: /* Methods: */
     }
 
     void processLog_();
-    void processLog_(uint32_t timeLimitMs);
+    void processLog_(std::uint32_t timeLimitMs);
     void processLogStep();
 
     inline const char * getSectionName(ExecutionSection * s) const {
         if (s->m_nameCached) {
-            std::map<uint32_t, char *>::const_iterator it = m_sectionTypes.find(s->m_sectionName.nameCacheId);
+            std::map<std::uint32_t, char *>::const_iterator it = m_sectionTypes.find(s->m_sectionName.nameCacheId);
             return (it == m_sectionTypes.end() ? "undefined_section" : it->second);
         } else {
             return s->m_sectionName.namePtr;
@@ -477,30 +479,30 @@ private: /* Fields: */
     std::ofstream m_logfile;
 
     /** The map of section types */
-    std::map<uint32_t, char *> m_sectionTypes;
+    std::map<std::uint32_t, char *> m_sectionTypes;
 
     /** The next available section type identifier */
-    uint32_t m_nextSectionTypeId;
+    std::uint32_t m_nextSectionTypeId;
 
     /**
      The stack of parent section identifiers.
 
      \see PushParentSection
     */
-    std::stack<uint32_t> m_parentSectionStack;
+    std::stack<std::uint32_t> m_parentSectionStack;
 
     /**
      The map of execution sections
 
      \see PushParentSection
      */
-    std::map<uint32_t, ExecutionSection*> m_sectionMap;
+    std::map<std::uint32_t, ExecutionSection*> m_sectionMap;
 
     /** The cache of sections waiting for flushing to the disk */
     std::deque<ExecutionSection*> m_sections;
 
     /** The next available section identifier */
-    uint32_t m_nextSectionId;
+    std::uint32_t m_nextSectionId;
 
     /** The lock for the profiling log */
     std::mutex m_profileLogMutex;
@@ -526,7 +528,10 @@ public:
      \param[in] complexityParameter the O(n) parameter describing the complexity of this section
      \param[in] pushParent whether or not to push a parent section and pop it when finished
     */
-    ExecutionSectionScope(ExecutionProfiler& profiler, T sectionTypeName, size_t complexityParameter, bool pushParent = true)
+    ExecutionSectionScope(ExecutionProfiler& profiler,
+                          T sectionTypeName,
+                          std::size_t complexityParameter,
+                          bool pushParent = true)
         : m_profiler (profiler)
         , m_sectionId (profiler.startSection<T>(sectionTypeName, complexityParameter))
         , m_isParent (pushParent)
@@ -547,7 +552,7 @@ public:
 
 private:
     /** The identifier of the section to end. */
-    uint32_t m_sectionId;
+    std::uint32_t m_sectionId;
 
     /** Indicates whether the section is parent section and should be popped. */
     bool m_isParent;

@@ -66,11 +66,11 @@ namespace sharemind {
 
 ExecutionSection::ExecutionSection(
         const char * sectionName,
-        uint32_t sectionId_,
-        uint32_t parentSectionId_,
+        std::uint32_t sectionId_,
+        std::uint32_t parentSectionId_,
         UsTime startTime_,
         UsTime endTime_,
-        size_t complexityParameter_
+        std::size_t complexityParameter_
         #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
         , const MinerNetworkStatistics & startNetStats
         , const MinerNetworkStatistics & endNetStats
@@ -91,12 +91,12 @@ ExecutionSection::ExecutionSection(
 }
 
 ExecutionSection::ExecutionSection(
-        uint32_t sectionType,
-        uint32_t sectionId_,
-        uint32_t parentSectionId_,
+        std::uint32_t sectionType,
+        std::uint32_t sectionId_,
+        std::uint32_t parentSectionId_,
         UsTime startTime_,
         UsTime endTime_,
-        size_t complexityParameter_
+        std::size_t complexityParameter_
         #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
         , const MinerNetworkStatistics & startNetStats
         , const MinerNetworkStatistics & endNetStats
@@ -184,7 +184,7 @@ void ExecutionProfiler::processLog_() {
         processLogStep();
 }
 
-void ExecutionProfiler::processLog(uint32_t timeLimitMs) {
+void ExecutionProfiler::processLog(std::uint32_t timeLimitMs) {
     if (!m_profilingActive)
         return;
 
@@ -193,7 +193,7 @@ void ExecutionProfiler::processLog(uint32_t timeLimitMs) {
     processLog_(timeLimitMs);
 }
 
-void ExecutionProfiler::processLog_(uint32_t timeLimitMs) {
+void ExecutionProfiler::processLog_(std::uint32_t timeLimitMs) {
     const UsTime end = getUsTime() + timeLimitMs * 1000u;
     while (getUsTime() < end && m_sections.size() > 0u)
         processLogStep();
@@ -218,7 +218,7 @@ void ExecutionProfiler::processLogStep() {
     m_sections.pop_front();
 }
 
-uint32_t ExecutionProfiler::newSectionType(const char * name) {
+std::uint32_t ExecutionProfiler::newSectionType(const char * name) {
     assert(name);
 
     if (!m_profilingActive)
@@ -227,10 +227,10 @@ uint32_t ExecutionProfiler::newSectionType(const char * name) {
     // Lock the list
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
-    size_t n = strlen(name);
+    std::size_t n = strlen(name);
 
     /// \todo Is it a good idea to reuse duplicate section types?
-    for(map<uint32_t, char *>::iterator it = m_sectionTypes.begin();
+    for(map<std::uint32_t, char *>::iterator it = m_sectionTypes.begin();
         it != m_sectionTypes.end(); ++it)
     {
         if (strncmp(it->second, name, n) == 0)
@@ -245,7 +245,7 @@ uint32_t ExecutionProfiler::newSectionType(const char * name) {
     return m_nextSectionTypeId++;
 }
 
-void ExecutionProfiler::endSection(uint32_t sectionId) {
+void ExecutionProfiler::endSection(std::uint32_t sectionId) {
     if (!m_profilingActive)
         return;
 
@@ -258,7 +258,7 @@ void ExecutionProfiler::endSection(uint32_t sectionId) {
 }
 
 void ExecutionProfiler::endSection(
-        uint32_t sectionId,
+        std::uint32_t sectionId,
         const UsTime endTime
         #ifdef SHAREMIND_NETWORK_STATISTICS_ENABLE
         , const MinerNetworkStatistics & endNetStats
@@ -271,7 +271,7 @@ void ExecutionProfiler::endSection(
     // Lock the list
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
-    map<uint32_t, ExecutionSection*>::iterator it = m_sectionMap.find(sectionId);
+    map<std::uint32_t, ExecutionSection*>::iterator it = m_sectionMap.find(sectionId);
     if (it == m_sectionMap.end()) {
         m_logger.error() << "Could not end section " << sectionId
                          << ". Not in queue.";
@@ -286,7 +286,7 @@ void ExecutionProfiler::endSection(
     m_sectionMap.erase(it);
 }
 
-void ExecutionProfiler::pushParentSection(uint32_t sectionId) {
+void ExecutionProfiler::pushParentSection(std::uint32_t sectionId) {
     if (!m_profilingActive)
         return;
 
