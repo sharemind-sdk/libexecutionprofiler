@@ -461,7 +461,7 @@ private: /* Methods: */
 
     inline const char * getSectionName(ExecutionSection * s) const {
         if (s->m_nameCached) {
-            std::map<std::uint32_t, char *>::const_iterator it = m_sectionTypes.find(s->m_sectionName.nameCacheId);
+            auto const it(m_sectionTypes.find(s->m_sectionName.nameCacheId));
             return (it == m_sectionTypes.end() ? "undefined_section" : it->second);
         } else {
             return s->m_sectionName.namePtr;
