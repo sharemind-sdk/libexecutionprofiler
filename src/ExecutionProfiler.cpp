@@ -33,11 +33,10 @@ inline std::string minerNetworkStatistics(
 {
     assert (startStats.size() == endStats.size());
 
-    typedef sharemind::MinerNetworkStatistics::iterator MNIT;
     std::ostringstream o;
 
-    for (MNIT sit = startStats.begin(); sit != startStats.end(); ++sit) {
-        MNIT eit = endStats.find(sit->first);
+    for (auto sit = startStats.begin(); sit != startStats.end(); ++sit) {
+        auto const eit(endStats.find(sit->first));
         if (eit != endStats.end()) {
             /// \note The reported byte count can overflow.
             o << (sit == startStats.begin() ? "" : ",")
@@ -230,9 +229,7 @@ std::uint32_t ExecutionProfiler::newSectionType(const char * name) {
     std::size_t n = strlen(name);
 
     /// \todo Is it a good idea to reuse duplicate section types?
-    for(map<std::uint32_t, char *>::iterator it = m_sectionTypes.begin();
-        it != m_sectionTypes.end(); ++it)
-    {
+    for (auto it = m_sectionTypes.cbegin(); it != m_sectionTypes.cend(); ++it) {
         if (strncmp(it->second, name, n) == 0)
             return it->first;
     }
@@ -271,7 +268,7 @@ void ExecutionProfiler::endSection(
     // Lock the list
     std::lock_guard<std::mutex> lock(m_profileLogMutex);
 
-    map<std::uint32_t, ExecutionSection*>::iterator it = m_sectionMap.find(sectionId);
+    auto it(m_sectionMap.find(sectionId));
     if (it == m_sectionMap.end()) {
         m_logger.error() << "Could not end section " << sectionId
                          << ". Not in queue.";
