@@ -37,7 +37,14 @@ INSTALL(FILES ${SharemindLibExecutionProfiler_HEADERS}
         COMPONENT dev)
 
 # The library:
-SharemindSetCxx11CompileOptions()
+IF("${SharemindCxxHeaders_VERSION}" VERSION_LESS "0.6.0")
+    SharemindSetCxx11CompileOptions()
+ELSEIF("${SharemindCMakeHelpers_VERSION}" VERSION_LESS "1.4")
+    MESSAGE(FATAL_ERROR
+            "Incompatible combination of CMakeHelpers and CxxHeaders versions!")
+ELSE()
+    SharemindSetCxx14CompileOptions()
+ENDIF()
 SharemindNewUniqueList(SharemindLibExecutionProfiler_LINK_LIBRARIES
     ${SharemindCxxHeaders_LIBRARIES}
     ${LogHard_LIBRARIES}
