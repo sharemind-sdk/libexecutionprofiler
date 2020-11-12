@@ -36,7 +36,6 @@ INSTALL(FILES ${SharemindLibExecutionProfiler_HEADERS}
         COMPONENT dev)
 
 # LibExecutionProfiler:
-SharemindSetCxx14CompileOptions()
 IF(SHAREMIND_NETWORK_STATISTICS)
     SharemindListAppendUnique(SharemindLibExecutionProfiler_DEFINITIONS
         "-DSHAREMIND_NETWORK_STATISTICS_ENABLE"
