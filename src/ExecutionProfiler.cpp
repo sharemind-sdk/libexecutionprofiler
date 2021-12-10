@@ -235,8 +235,7 @@ std::uint32_t ExecutionProfiler::newSectionType(const char * name) {
     }
 
     char * cname = new char[n + 1];
-    strncpy(cname, name, n);
-    cname[n] = '\0';
+    std::memcpy(cname, name, n + 1);
 
     m_sectionTypes.insert(make_pair(m_nextSectionTypeId, cname));
     return m_nextSectionTypeId++;
