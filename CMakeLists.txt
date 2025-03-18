@@ -26,7 +26,7 @@ INCLUDE("${CMAKE_CURRENT_BINARY_DIR}/config.local" OPTIONAL)
 FIND_PACKAGE(SharemindCMakeHelpers 1.6 REQUIRED)
 
 FIND_PACKAGE(LogHard 0.6.0 REQUIRED)
-FIND_PACKAGE(SharemindCxxHeaders 0.9.0 REQUIRED)
+FIND_PACKAGE(SharemindCxxHeaders 0.10.1 REQUIRED)
 
 # Headers:
 FILE(GLOB_RECURSE SharemindLibExecutionProfiler_HEADERS
@@ -62,7 +62,7 @@ TARGET_LINK_LIBRARIES(LibExecutionProfiler
 SharemindCreateCMakeFindFilesForTarget(LibExecutionProfiler
     DEPENDENCIES
         "LogHard 0.6.0"
-        "SharemindCxxHeaders 0.9.0"
+        "SharemindCxxHeaders 0.10.1"
     )
 
 # Packaging:
@@ -82,7 +82,7 @@ SharemindAddComponentPackage("dev"
     DEB_DEPENDS
         "libsharemind-executionprofiler (= ${SharemindLibExecutionProfiler_DEB_lib_PACKAGE_VERSION})"
         "libloghard-dev (>= 0.4.0)"
-        "libsharemind-cxxheaders-dev (>= 0.9.0)"
+        "libsharemind-cxxheaders-dev (>= 0.10.1)"
         "libstdc++-dev"
 )
 SharemindAddComponentPackage("debug"
